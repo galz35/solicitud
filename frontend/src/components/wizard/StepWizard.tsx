@@ -122,7 +122,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
             }}>
             <ChevronLeft size={16} /> Anterior
           </button>
-          <button onClick={onNext} disabled={isLast || isSaving}
+          <button onClick={onNext} disabled={isSaving}
             style={{
               padding: '10px 22px', border: 'none', borderRadius: 10,
               background: 'linear-gradient(135deg, #0d9488, #059669)', color: '#fff',
