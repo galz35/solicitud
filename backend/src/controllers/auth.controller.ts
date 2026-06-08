@@ -374,15 +374,15 @@ export async function generarInvitacion(req: Request, res: Response, next: NextF
           WHERE candidato_id = @candidato_id
         `);
     } else {
-      // Crear registro de usuario con token
+      // Crear registro de usuario con token (email NULL hasta que se registre)
       await pool
         .request()
         .input('candidato_id', sql.Int, candidatoId)
         .input('token', sql.VarChar(255), token)
         .input('expiracion', sql.DateTime2, expiracion)
         .query(`
-          INSERT INTO tbl_usuarios_candidatos (candidato_id, email, password_hash, token_invitacion, token_expiracion)
-          VALUES (@candidato_id, '', '', @token, @expiracion)
+          INSERT INTO tbl_usuarios_candidatos (candidato_id, password_hash, token_invitacion, token_expiracion)
+          VALUES (@candidato_id, '', @token, @expiracion)
         `);
     }
 
