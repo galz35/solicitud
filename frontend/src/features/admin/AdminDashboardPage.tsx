@@ -7,6 +7,8 @@ export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'candidatos' | 'invitar'>('candidatos');
   const [query, setQuery] = useState('');
+  const [filtroMes, setFiltroMes] = useState('');
+  const [filtroPuesto, setFiltroPuesto] = useState('');
   const [candidatos, setCandidatos] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>({ total: 0, pages: 1 });
@@ -26,12 +28,12 @@ export const AdminDashboardPage: React.FC = () => {
   const cargar = useCallback(async (q = query, p = page) => {
     setLoading(true);
     try {
-      const res = await apiService.buscarCandidatos(q, p, 15);
+      const res = await apiService.buscarCandidatos(q, p, 15, filtroMes, filtroPuesto);
       setCandidatos(res.data || []);
       setPagination(res.pagination || { total: 0, pages: 1 });
     } catch { showToast('Error al cargar', 'error'); }
     finally { setLoading(false); }
-  }, [query, page]);
+  }, [query, page, filtroMes, filtroPuesto]);
 
   useEffect(() => {
     const user = apiService.getCurrentUser();
@@ -161,30 +163,33 @@ export const AdminDashboardPage: React.FC = () => {
       {/* Tab: Candidatos */}
       {tab === 'candidatos' && (
         <div>
-          {/* Search + Export */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 12, top: 10, fontSize: 14, color: '#999' }}>🔍</span>
+          {/* Filters row */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap', alignItems: 'end' }}>
+            <div style={{ flex: '1 1 180px', minWidth: 150 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 3 }}>🔍 Buscar</label>
               <input value={query} onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { setPage(1); cargar(query, 1); } }}
-                placeholder="Buscar por nombre, cédula o puesto..."
-                style={{
-                  width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #e4e7ec',
-                  borderRadius: 10, fontSize: 14, background: '#fff',
-                  outline: 'none', transition: 'border 0.2s'
-                }} />
+                placeholder="Nombre, cédula o puesto..."
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e7ec', borderRadius: 8, fontSize: 13, background: '#fff', outline: 'none' }} />
+            </div>
+            <div style={{ minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 3 }}>📅 Mes</label>
+              <input type="month" value={filtroMes} onChange={e => setFiltroMes(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e7ec', borderRadius: 8, fontSize: 13, background: '#fff', outline: 'none' }} />
+            </div>
+            <div style={{ flex: '1 1 140px', minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 3 }}>💼 Puesto</label>
+              <input value={filtroPuesto} onChange={e => setFiltroPuesto(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { setPage(1); cargar(query, 1); } }}
+                placeholder="Ej: Analista"
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e4e7ec', borderRadius: 8, fontSize: 13, background: '#fff', outline: 'none' }} />
             </div>
             <button onClick={() => { setPage(1); cargar(query, 1); }}
-              style={{
-                padding: '10px 18px', border: 'none', borderRadius: 10,
-                background: '#0d9488', color: '#fff', cursor: 'pointer', fontSize: 14
-              }}>Buscar</button>
+              style={{ padding: '8px 16px', border: 'none', borderRadius: 8, background: '#0d9488', color: '#fff', cursor: 'pointer', fontSize: 13, height: 35 }}>Filtrar</button>
+            <button onClick={() => { setQuery(''); setFiltroMes(''); setFiltroPuesto(''); setPage(1); setTimeout(() => cargar('', 1), 0); }}
+              style={{ padding: '8px 14px', border: '1px solid #e4e7ec', borderRadius: 8, background: '#fff', color: '#666', cursor: 'pointer', fontSize: 13, height: 35 }}>Limpiar</button>
             <button onClick={() => apiService.exportarCandidatos(query)}
-              style={{
-                padding: '10px 18px', border: 'none', borderRadius: 10,
-                background: '#1e293b', color: '#fff', cursor: 'pointer', fontSize: 14,
-                display: 'flex', alignItems: 'center', gap: 6
-              }}>
+              style={{ padding: '8px 16px', border: 'none', borderRadius: 8, background: '#1e293b', color: '#fff', cursor: 'pointer', fontSize: 13, height: 35, display: 'flex', alignItems: 'center', gap: 4 }}>
               📥 Excel
             </button>
           </div>

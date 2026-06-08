@@ -174,9 +174,9 @@ export const apiService = {
   },
 
   // 8. BÚSQUEDA (ADMIN)
-  async buscarCandidatos(query: string, page = 1, limit = 10) {
+  async buscarCandidatos(query: string, page = 1, limit = 15, mes = '', puesto = '') {
     const response = await api.get('/buscar', {
-      params: { q: query, page, limit },
+      params: { q: query, page, limit, mes, puesto },
     });
     return response.data;
   },
