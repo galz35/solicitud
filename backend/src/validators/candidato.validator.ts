@@ -48,8 +48,8 @@ export const registrarCandidatoSchema = z.object({
     
     // Puesto solicitado (opcional - se guarda en paso 6)
     puesto: z.string().optional().nullable(),
-    salario_max: z.union([z.literal(''), z.number().positive()]).optional().nullable(),
-    salario_min: z.union([z.literal(''), z.number().positive()]).optional().nullable(),
+    salario_max: z.union([z.literal(''), z.string(), z.number().positive()]).optional().nullable(),
+    salario_min: z.union([z.literal(''), z.string(), z.number().positive()]).optional().nullable(),
     turno: z.string().optional().nullable(),
     obs_horario: z.string().optional().nullable(),
     experiencia: z.string().optional().nullable(),
