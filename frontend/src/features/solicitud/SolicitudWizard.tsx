@@ -108,6 +108,7 @@ export const SolicitudWizard: React.FC = () => {
       saved.idiomasCandidato && setIdiomasCandidato(saved.idiomasCandidato);
       saved.puesto && setPuesto(saved.puesto);
       saved.currentStep && setCurrentStep(saved.currentStep);
+      if (saved.datosGenerales?.cedula) setCedula(saved.datosGenerales.cedula);
       apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
       setIsLoading(false);
       return;
@@ -307,7 +308,7 @@ export const SolicitudWizard: React.FC = () => {
           setFormErrors(errors);
           return;
         }
-        const res = await apiService.guardarFamiliar(cedula, tempFamiliar);
+        const res = await apiService.guardarFamiliar(cedula || datosGenerales.cedula, tempFamiliar);
         setFamiliares([...familiares, { ...tempFamiliar, id_df: res.id_df }]);
         showToast('Familiar agregado.', 'success');
       } 
@@ -320,7 +321,7 @@ export const SolicitudWizard: React.FC = () => {
           setFormErrors(errors);
           return;
         }
-        const res = await apiService.guardarAcademico(cedula, tempAcademico);
+        const res = await apiService.guardarAcademico(cedula || datosGenerales.cedula, tempAcademico);
         setAcademicos([...academicos, { ...tempAcademico, id_da: res.id_da }]);
         showToast('Educación agregada.', 'success');
       } 
@@ -333,7 +334,7 @@ export const SolicitudWizard: React.FC = () => {
           setFormErrors(errors);
           return;
         }
-        const res = await apiService.guardarExperiencia(cedula, tempExperiencia);
+        const res = await apiService.guardarExperiencia(cedula || datosGenerales.cedula, tempExperiencia);
         setExperiencias([...experiencias, { ...tempExperiencia, id_ep: res.id_ep }]);
         showToast('Experiencia agregada.', 'success');
       } 
@@ -346,14 +347,14 @@ export const SolicitudWizard: React.FC = () => {
           setFormErrors(errors);
           return;
         }
-        const res = await apiService.guardarReferencia(cedula, tempReferencia);
+        const res = await apiService.guardarReferencia(cedula || datosGenerales.cedula, tempReferencia);
         setReferencias([...referencias, { ...tempReferencia, id_ref: res.id_ref }]);
         showToast('Referencia agregada.', 'success');
       } 
       
       else if (modalType === 'idioma') {
         // Guardar idioma
-        await apiService.guardarIdioma(cedula, tempIdioma);
+        await apiService.guardarIdioma(cedula || datosGenerales.cedula, tempIdioma);
         const desc = catalogoIdiomas.find(i => i.cod_idioma === Number(tempIdioma.cod_idioma))?.descripcion || 'Inglés';
         // Recargar idiomas
         setIdiomasCandidato([...idiomasCandidato.filter(i => i.cod_idioma !== Number(tempIdioma.cod_idioma)), { ...tempIdioma, idioma_descripcion: desc }]);
@@ -374,7 +375,7 @@ export const SolicitudWizard: React.FC = () => {
 
   const handleRemoveFamiliar = async (id: number) => {
     try {
-      await apiService.eliminarFamiliar(cedula, id);
+      await apiService.eliminarFamiliar(cedula || datosGenerales.cedula, id);
       setFamiliares(familiares.filter((f) => f.id_df !== id));
       showToast('Registro eliminado.', 'info');
     } catch (err) {
@@ -384,7 +385,7 @@ export const SolicitudWizard: React.FC = () => {
 
   const handleRemoveAcademico = async (id: number) => {
     try {
-      await apiService.eliminarAcademico(cedula, id);
+      await apiService.eliminarAcademico(cedula || datosGenerales.cedula, id);
       setAcademicos(academicos.filter((a) => a.id_da !== id));
       showToast('Registro eliminado.', 'info');
     } catch (err) {
@@ -394,7 +395,7 @@ export const SolicitudWizard: React.FC = () => {
 
   const handleRemoveExperiencia = async (id: number) => {
     try {
-      await apiService.eliminarExperiencia(cedula, id);
+      await apiService.eliminarExperiencia(cedula || datosGenerales.cedula, id);
       setExperiencias(experiencias.filter((e) => e.id_ep !== id));
       showToast('Registro eliminado.', 'info');
     } catch (err) {
@@ -404,7 +405,7 @@ export const SolicitudWizard: React.FC = () => {
 
   const handleRemoveReferencia = async (id: number) => {
     try {
-      await apiService.eliminarReferencia(cedula, id);
+      await apiService.eliminarReferencia(cedula || datosGenerales.cedula, id);
       setReferencias(referencias.filter((r) => r.id_ref !== id));
       showToast('Registro eliminado.', 'info');
     } catch (err) {
@@ -414,7 +415,7 @@ export const SolicitudWizard: React.FC = () => {
 
   const handleRemoveIdioma = async (codIdioma: number) => {
     try {
-      await apiService.eliminarIdioma(cedula, codIdioma);
+      await apiService.eliminarIdioma(cedula || datosGenerales.cedula, codIdioma);
       setIdiomasCandidato(idiomasCandidato.filter((i) => i.cod_idioma !== codIdioma));
       showToast('Idioma eliminado.', 'info');
     } catch (err) {
@@ -442,7 +443,7 @@ export const SolicitudWizard: React.FC = () => {
       user.existe = true;
       localStorage.setItem('candidato', JSON.stringify(user));
     }
-    navigate(`/imprimir/${cedula}`);
+    navigate(`/imprimir/${cedula || datosGenerales.cedula}`);
   };
 
   return (
