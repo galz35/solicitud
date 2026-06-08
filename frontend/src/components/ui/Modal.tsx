@@ -9,20 +9,14 @@ interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-  
-  // Cerrar al presionar la tecla Esc
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+      window.addEventListener('keydown', handleKey);
+      document.body.style.overflow = 'hidden';
     }
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKey);
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
@@ -30,92 +24,37 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   if (!isOpen) return null;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.4)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '1.25rem',
-        animation: 'fadeIn 0.2s ease-out'
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          backgroundColor: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-lg)',
-          width: '100%',
-          maxWidth: '550px',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--border-color)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: '90vh',
-          animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}
-        onClick={(e) => e.stopPropagation()} // Evita cerrar al hacer click dentro del modal
-      >
-        {/* Cabecera del Modal */}
-        <div 
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-primary)'
-          }}
-        >
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, fontFamily: 'var(--font-title)' }}>
-            {title}
-          </h3>
-          <button 
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              padding: '4px',
-              borderRadius: 'var(--radius-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--border-color)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <X size={20} />
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1.25rem', animation: 'fadeIn 0.2s ease'
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)',
+        width: '100%', maxWidth: 520,
+        boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border)',
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        maxHeight: '90vh', animation: 'scaleIn 0.25s ease'
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-light)'
+        }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>{title}</h3>
+          <button onClick={onClose} style={{
+            width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-sm)',
+            background: 'var(--bg-muted)', cursor: 'pointer', color: 'var(--text-secondary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all var(--transition-fast)'
+          }}>
+            <X size={16} />
           </button>
         </div>
-
-        {/* Contenido */}
         <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
           {children}
         </div>
       </div>
-
-      {/* Animaciones CSS embebidas en JS para evitar carga extra */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'warning' | 'error' | 'info';
 
@@ -10,99 +9,46 @@ interface ToastProps {
   duration?: number;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3000 }) => {
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
+const icons: Record<ToastType, string> = {
+  success: '✅',
+  warning: '⚠️',
+  error: '❌',
+  info: 'ℹ️',
+};
 
+const colors: Record<ToastType, { bg: string; border: string; text: string }> = {
+  success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
+  warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
+  error: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
+  info: { bg: '#f0fdf4', border: '#a7f3d0', text: '#166534' },
+};
+
+export const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3500 }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, duration);
     return () => clearTimeout(timer);
   }, [onClose, duration]);
 
-  const getStyleConfig = () => {
-    switch (type) {
-      case 'success':
-        return {
-          icon: <CheckCircle size={20} color="var(--color-success)" />,
-          bg: 'var(--color-success-light)',
-          border: 'var(--color-success)',
-        };
-      case 'warning':
-        return {
-          icon: <AlertTriangle size={20} color="var(--color-warning)" />,
-          bg: 'var(--color-warning-light)',
-          border: 'var(--color-warning)',
-        };
-      case 'error':
-        return {
-          icon: <XCircle size={20} color="var(--color-error)" />,
-          bg: 'var(--color-error-light)',
-          border: 'var(--color-error)',
-        };
-      case 'info':
-      default:
-        return {
-          icon: <Info size={20} color="var(--color-info)" />,
-          bg: 'var(--color-info-light)',
-          border: 'var(--color-info)',
-        };
-    }
-  };
-
-  const config = getStyleConfig();
+  const c = colors[type];
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        padding: '1rem 1.25rem',
-        backgroundColor: config.bg,
-        borderLeft: `4px solid ${config.border}`,
-        borderRadius: 'var(--radius-md)',
-        boxShadow: 'var(--shadow-lg)',
-        color: 'var(--text-primary)',
-        fontSize: '0.9rem',
-        fontWeight: 500,
-        minWidth: '300px',
-        maxWidth: '450px',
-        position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        zIndex: 2000,
-        animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-      }}
-    >
-      <div>{config.icon}</div>
-      <div style={{ flex: 1 }}>{message}</div>
-      <button
-        onClick={onClose}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2px',
-          borderRadius: '50%',
-          transition: 'background-color 0.2s'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-      >
-        <X size={16} />
-      </button>
-
-      <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-      `}</style>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '0.75rem',
+      padding: '0.875rem 1.25rem', borderRadius: 'var(--radius-lg)',
+      background: c.bg, border: `1px solid ${c.border}`,
+      boxShadow: 'var(--shadow-lg)', color: c.text,
+      fontSize: '0.9rem', fontWeight: 500,
+      minWidth: 300, maxWidth: 450,
+      position: 'fixed', bottom: '1.5rem', right: '1.5rem',
+      zIndex: 2000, animation: 'slideUp 0.35s ease',
+      backdropFilter: 'blur(8px)'
+    }}>
+      <span style={{ fontSize: 18 }}>{icons[type]}</span>
+      <span style={{ flex: 1 }}>{message}</span>
+      <button onClick={onClose} style={{
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        padding: 2, color: c.text, opacity: 0.6, fontSize: 16
+      }}>✕</button>
     </div>
   );
 };
