@@ -1,126 +1,158 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, UserCircle, FileEdit, ClipboardList, Download, Shield, LogOut, ExternalLink } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const user = apiService.getCurrentUser();
   const isAdmin = user?.rol === 'admin';
 
-  const menuItems = [
-    { path: '/dashboard', label: 'Mi Perfil', icon: <UserCircle size={18} />, adminOnly: false },
-    { path: '/solicitud', label: 'Editar Solicitud', icon: <FileEdit size={18} />, adminOnly: false },
+  const currentPath = location.pathname.replace('/solicitud', '') || '/';
+
+  const items = [
+    { path: '/dashboard', label: 'Mi Perfil', icon: '👤', adminOnly: false },
+    { path: '/solicitud', label: 'Mi Solicitud', icon: '📋', adminOnly: false },
     ...(isAdmin ? [
-      { path: '/admin', label: 'Admin RRHH', icon: <Shield size={18} />, adminOnly: true },
-      { path: '/admin/usuarios', label: 'Gestionar Usuarios', icon: <UsersIcon size={18} />, adminOnly: true },
-    ] : [] as any[]),
-    { path: '/', label: 'Portal Principal', icon: <ExternalLink size={18} />, adminOnly: false, external: true },
+      { path: '/admin', label: 'Panel RH', icon: '⚙️', adminOnly: true },
+      { path: '/admin/usuarios', label: 'Usuarios', icon: '👥', adminOnly: true },
+    ] : []),
   ];
 
-  const isActive = (path: string) => location.pathname === `/solicitud${path}` || location.pathname === path;
-
-  const handleNavigate = (item: typeof menuItems[0]) => {
-    setMenuOpen(false);
-    if (item.external) {
-      window.location.href = 'https://rhclaroni.com/portal/';
-      return;
-    }
-    navigate(item.path);
+  const isActive = (p: string) => {
+    if (p === '/') return currentPath === '/' || currentPath === '';
+    return currentPath.startsWith(p);
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      {/* Top bar */}
+    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+      {/* Top Navbar */}
       <div style={{
+        height: 60, background: '#fff', borderBottom: '1px solid #e4e7ec',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0.75rem 1.25rem', background: 'var(--bg-secondary)',
-        borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100
+        padding: '0 20px', position: 'sticky', top: 0, zIndex: 1000,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
       }}>
-        <button onClick={() => setMenuOpen(!menuOpen)} style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          padding: '0.5rem', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)'
-        }}>
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-        <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--primary)' }}>
-          Solicitud de Empleo
-        </span>
-        <button onClick={() => { apiService.logout(); navigate('/login'); }} style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          color: 'var(--color-error)', padding: '0.5rem'
-        }}>
-          <LogOut size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setOpen(!open)}
+            style={{
+              width: 36, height: 36, border: 'none', borderRadius: 8,
+              background: open ? '#e8f5e9' : '#f5f5f5', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s', color: '#333', fontSize: 18
+            }}>
+            {open ? '✕' : '☰'}
+          </button>
+          <span style={{ fontWeight: 700, fontSize: 16, color: '#0d9488' }}>
+            Portal Solicitud
+          </span>
+        </div>
+        <button onClick={() => { apiService.logout(); navigate('/login'); }}
+          style={{
+            padding: '6px 14px', border: '1px solid #fee2e2', borderRadius: 8,
+            background: '#fef2f2', color: '#dc2626', cursor: 'pointer',
+            fontSize: 13, fontWeight: 500, transition: 'all 0.2s'
+          }}>
+          Salir
         </button>
       </div>
 
-      {/* Hamburger menu overlay */}
-      {menuOpen && (
-        <div style={{
-          position: 'fixed', top: 56, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.3)', zIndex: 99
-        }} onClick={() => setMenuOpen(false)} />
+      {/* Overlay */}
+      {open && (
+        <div onClick={() => setOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)',
+            zIndex: 998, animation: 'fadeIn 0.2s'
+          }} />
       )}
 
       {/* Sidebar */}
       <div style={{
-        position: 'fixed', top: 56, left: 0, bottom: 0, width: 260,
-        background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)',
-        transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)',
-        transition: 'transform 0.25s ease', zIndex: 100, overflowY: 'auto',
-        padding: '1rem 0'
+        position: 'fixed', top: 60, left: 0, bottom: 0, width: 250,
+        background: '#fff', borderRight: '1px solid #e4e7ec',
+        transform: open ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+        zIndex: 999, display: 'flex', flexDirection: 'column',
+        boxShadow: open ? '4px 0 20px rgba(0,0,0,0.06)' : 'none'
       }}>
-        {menuItems.map((item, i) => (
-          <button key={i} onClick={() => handleNavigate(item)} style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            width: '100%', padding: '0.75rem 1.25rem',
-            border: 'none', background: isActive(item.path) ? 'var(--primary-light)' : 'transparent',
-            color: isActive(item.path) ? 'var(--primary)' : 'var(--text-primary)',
-            fontWeight: isActive(item.path) ? 600 : 400,
-            cursor: 'pointer', fontSize: '0.9rem', textAlign: 'left'
-          }}>
-            {item.icon}
-            <span>{item.label}</span>
-            {item.external && <ExternalLink size={14} style={{ marginLeft: 'auto' }} />}
-          </button>
-        ))}
-
-        {user && (
+        {/* User info */}
+        <div style={{
+          padding: '18px 20px', borderBottom: '1px solid #f0f0f0',
+          background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)'
+        }}>
           <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            padding: '1rem 1.25rem', borderTop: '1px solid var(--border-color)',
-            fontSize: '0.8rem', color: 'var(--text-secondary)'
+            width: 40, height: 40, borderRadius: 10,
+            background: 'linear-gradient(135deg, #0d9488, #059669)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 700, fontSize: 16, marginBottom: 10
           }}>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{user.nombre || user.cedula}</div>
-            <div>{user.email || user.cedula}</div>
-            {isAdmin && <span style={{ color: 'var(--color-info)', fontWeight: 600, fontSize: '0.75rem' }}>Administrador</span>}
+            {(user?.nombre || user?.cedula || 'U')[0]}
           </div>
-        )}
+          <div style={{ fontWeight: 600, fontSize: 13, color: '#1a1a1a' }}>
+            {user?.nombre || user?.cedula || 'Usuario'}
+          </div>
+          <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>
+            {user?.email || user?.cedula || ''}
+          </div>
+          {isAdmin && (
+            <div style={{
+              marginTop: 6, fontSize: 11, fontWeight: 600, color: '#0d9488',
+              background: '#d1fae5', display: 'inline-block',
+              padding: '2px 10px', borderRadius: 20
+            }}>
+              Administrador
+            </div>
+          )}
+        </div>
+
+        {/* Menu items */}
+        <div style={{ flex: 1, padding: '8px 12px' }}>
+          {items.map((item) => (
+            <button key={item.path} onClick={() => { setOpen(false); navigate(item.path); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                width: '100%', padding: '10px 14px',
+                border: 'none', borderRadius: 10, cursor: 'pointer',
+                fontSize: 14, textAlign: 'left', marginBottom: 2,
+                background: isActive(item.path)
+                  ? 'linear-gradient(135deg, #f0fdf4, #ecfdf5)'
+                  : 'transparent',
+                color: isActive(item.path) ? '#0d9488' : '#444',
+                fontWeight: isActive(item.path) ? 600 : 400,
+                transition: 'all 0.15s'
+              }}>
+              <span style={{ fontSize: 18 }}>{item.icon}</span>
+              <span>{item.label}</span>
+              {isActive(item.path) && (
+                <span style={{
+                  marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%',
+                  background: '#0d9488'
+                }} />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Bottom */}
+        <div style={{ padding: '12px 20px', borderTop: '1px solid #f0f0f0', fontSize: 12, color: '#999' }}>
+          Solicitud de Empleo v1.0
+        </div>
       </div>
 
       {/* Content */}
       <div style={{
-        marginLeft: 0, padding: '1rem', maxWidth: 1000, margin: '0 auto',
-        paddingTop: '1rem'
+        maxWidth: 960, margin: '0 auto', padding: '24px 20px',
+        transition: 'all 0.2s'
       }}>
         {children}
       </div>
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: slideUp 0.3s ease; }
+      `}</style>
     </div>
   );
 };
-
-// Inline Users icon to avoid extra import
-const UsersIcon = (props: any) => (
-  <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
