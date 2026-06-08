@@ -25,7 +25,7 @@ export default function App() {
         <Route path="/registro" element={<RegistroPage />} />
         <Route path="/auth/sso" element={<SSOHandlerPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/solicitud" element={<ProtectedRoute><SolicitudWizard /></ProtectedRoute>} />
+        <Route path="/solicitud" element={<SolicitudWizard />} />
         <Route path="/buscar" element={<ProtectedRoute><BuscarPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/admin/usuarios" element={<ProtectedRoute><AdminUsuariosPage /></ProtectedRoute>} />

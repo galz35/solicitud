@@ -65,7 +65,37 @@ export const SolicitudWizard: React.FC = () => {
   // 1. CARGAR DATOS
   useEffect(() => {
     const user = apiService.getCurrentUser();
+
+    // Si no hay sesión pero hay token de invitación, modo invitado
     if (!user) {
+      if (invToken) {
+        // Validar token y obtener info del candidato
+        apiService.validarToken(invToken).then((res: any) => {
+          if (res.guestToken) {
+            localStorage.setItem('token', res.guestToken);
+            localStorage.setItem('candidato', JSON.stringify({
+              cedula: res.candidato?.cedula || '',
+              existe: false,
+            }));
+          }
+          if (res.candidato) {
+            setCedula(res.candidato.cedula);
+            setDatosGenerales((prev: any) => ({
+              ...prev,
+              cedula: res.candidato.cedula,
+              correo: res.candidato.email || '',
+              pnombre: res.candidato.nombre?.split(' ')[0] || '',
+              papellido: res.candidato.nombre?.split(' ').slice(1).join(' ') || '',
+            }));
+          }
+          // Cargar catálogo de idiomas
+          apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
+          setIsLoading(false);
+        }).catch(() => {
+          navigate('/login');
+        });
+        return;
+      }
       navigate('/login');
       return;
     }
@@ -112,7 +142,7 @@ export const SolicitudWizard: React.FC = () => {
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, invToken]);
 
   if (isLoading) {
     return (

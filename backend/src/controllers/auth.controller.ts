@@ -167,9 +167,17 @@ export async function validarToken(req: Request, res: Response, next: NextFuncti
 
     // Si ya tiene email, significa que ya se registró
     if (data.email) {
+      // Generar token temporal para que pueda editar
+      const guestToken = jwt.sign({
+        cedula: data.cedula,
+        candidato_id: data.candidato_id,
+        method: 'guest',
+      }, JWT_SECRET, { expiresIn: '2h' });
+
       res.status(200).json({
         status: 'success',
         yaRegistrado: true,
+        guestToken,
         candidato: {
           id: data.candidato_id,
           cedula: data.cedula,
@@ -180,9 +188,17 @@ export async function validarToken(req: Request, res: Response, next: NextFuncti
       return;
     }
 
+    // Generar token temporal de invitado para que pueda guardar datos
+    const guestToken = jwt.sign({
+      cedula: data.cedula,
+      candidato_id: data.candidato_id,
+      method: 'guest',
+    }, JWT_SECRET, { expiresIn: '2h' });
+
     res.status(200).json({
       status: 'success',
       yaRegistrado: false,
+      guestToken,
       candidato: {
         id: data.candidato_id,
         cedula: data.cedula,
