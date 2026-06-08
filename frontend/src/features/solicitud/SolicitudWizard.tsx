@@ -150,21 +150,26 @@ export const SolicitudWizard: React.FC = () => {
         setCatalogoIdiomas(idms);
 
         if (user.existe) {
-          const data = await apiService.getCandidato(user.cedula);
-          if (data.candidato) {
-            setDatosGenerales({
-              ...data.candidato,
-              ...data.saludDeportes,
-              ...data.emergencia,
-              fecha_nac: data.candidato.fecha_nac ? data.candidato.fecha_nac.split('T')[0] : ''
-            });
+          try {
+            const data = await apiService.getCandidato(user.cedula);
+            if (data.candidato) {
+              setDatosGenerales({
+                ...data.candidato, ...data.saludDeportes, ...data.emergencia,
+                fecha_nac: data.candidato.fecha_nac ? data.candidato.fecha_nac.split('T')[0] : ''
+              });
+            }
+            if (data.puesto) setPuesto(data.puesto);
+            setFamiliares(data.familiares || []);
+            setAcademicos(data.academicos || []);
+            setExperiencias(data.experiencia || []);
+            setReferencias(data.referencias || []);
+            setIdiomasCandidato(data.idiomas || []);
+          } catch {
+            // Si da error (ej: no existe en BD), tratar como nuevo usuario
+            user.existe = false;
+            localStorage.setItem('candidato', JSON.stringify(user));
+            setDatosGenerales((prev: any) => ({ ...prev, cedula: user.cedula }));
           }
-          if (data.puesto) setPuesto(data.puesto);
-          setFamiliares(data.familiares || []);
-          setAcademicos(data.academicos || []);
-          setExperiencias(data.experiencia || []);
-          setReferencias(data.referencias || []);
-          setIdiomasCandidato(data.idiomas || []);
         } else {
           setDatosGenerales((prev: any) => ({ ...prev, cedula: user.cedula }));
         }

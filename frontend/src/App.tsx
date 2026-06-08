@@ -17,6 +17,25 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
+function WizardRoute() {
+  const token = localStorage.getItem('token');
+  const params = new URLSearchParams(window.location.search);
+  const invToken = params.get('token');
+
+  // Guest with invitation token → no layout
+  if (!token && invToken) return <SolicitudWizard />;
+
+  // Authenticated user → with layout
+  if (token) return <Layout><SolicitudWizard /></Layout>;
+
+  // Not authenticated → redirect
+  return <Navigate to="/login" replace />;
+}
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/login" replace />;
+  return <Layout>{children}</Layout>;
+}
+
 export default function App() {
   return (
     <BrowserRouter basename="/solicitud">
@@ -25,7 +44,7 @@ export default function App() {
         <Route path="/registro" element={<RegistroPage />} />
         <Route path="/auth/sso" element={<SSOHandlerPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/solicitud" element={<SolicitudWizard />} />
+        <Route path="/solicitud" element={<WizardRoute />} />
         <Route path="/buscar" element={<ProtectedRoute><BuscarPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/admin/usuarios" element={<ProtectedRoute><AdminUsuariosPage /></ProtectedRoute>} />
