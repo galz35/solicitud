@@ -1235,6 +1235,14 @@ export const SolicitudWizard: React.FC = () => {
 
       </StepWizard>
 
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 640px) {
+          .grid-2-mobile > div { min-width: 100% !important; }
+          .wizard-field { min-width: 100% !important; }
+        }
+      `}</style>
+
       {/* ========================================================== */}
       {/* TOAST SYSTEM */}
       {/* ========================================================== */}

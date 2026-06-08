@@ -28,7 +28,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
         background: '#fff', borderRadius: 16,
         border: '1px solid #e4e7ec', padding: '20px 24px',
         marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-      }}>
+      }} className="wiz-progress">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#666' }}>
             Paso {currentStep} de {steps.length}
@@ -51,7 +51,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
         </div>
 
         {/* Step circles */}
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }} className="wiz-steps">
           {steps.map((step, i) => {
             const done = step.id < currentStep;
             const active = step.id === currentStep;
@@ -74,13 +74,13 @@ export const StepWizard: React.FC<StepWizardProps> = ({
                   color: done || active ? '#fff' : '#bbb',
                   boxShadow: active ? '0 0 0 4px rgba(13,148,136,0.12)' : 'none',
                   transition: 'all 0.3s ease'
-                }}>
+                }} className="wiz-step-circle">
                   {done ? <Check size={12} /> : step.id}
                 </div>
                 <span style={{
                   fontSize: 10, textAlign: 'center', color: active ? '#0d9488' : done ? '#555' : '#bbb',
                   fontWeight: active ? 600 : 400, lineHeight: 1.2, maxWidth: 60
-                }}>
+                }} className="wiz-step-label">
                   {step.label}
                 </span>
               </div>
@@ -94,7 +94,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
         <div style={{
           background: '#f0fdf4', borderRadius: 10, padding: '10px 16px',
           marginBottom: 16, border: '1px solid #bbf7d0', fontSize: 13, color: '#166534'
-        }}>
+        }} className="wiz-desc">
           💡 {current.description}
         </div>
       )}
@@ -104,7 +104,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
         background: '#fff', borderRadius: 16, border: '1px solid #e4e7ec',
         padding: '24px 28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         animation: 'slideUp 0.3s ease', minHeight: 300
-      }}>
+      }} className="wiz-content">
         {children}
       </div>
 
@@ -112,7 +112,7 @@ export const StepWizard: React.FC<StepWizardProps> = ({
       {(onNext || onBack) && (
         <div style={{
           display: 'flex', justifyContent: 'space-between', marginTop: 20, gap: 12
-        }}>
+        }} className="wiz-nav">
           <button onClick={onBack} disabled={isFirst}
             style={{
               padding: '10px 22px', border: '1.5px solid #e4e7ec', borderRadius: 10,
@@ -138,6 +138,15 @@ export const StepWizard: React.FC<StepWizardProps> = ({
 
       <style>{`
         @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 640px) {
+          .wiz-steps { gap: 2px !important; }
+          .wiz-step-label { display: none !important; }
+          .wiz-step-circle { width: 22px !important; height: 22px !important; font-size: 9px !important; margin-bottom: 0 !important; }
+          .wiz-progress { padding: 12px 14px !important; }
+          .wiz-content { padding: 16px !important; }
+          .wiz-nav button { padding: 10px 14px !important; font-size: 12px !important; }
+          .wiz-desc { font-size: 12px !important; padding: 8px 12px !important; }
+        }
       `}</style>
     </div>
   );

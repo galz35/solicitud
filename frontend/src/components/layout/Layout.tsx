@@ -113,12 +113,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px' }} className="layout-content">
         {children}
       </div>
 
       <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (min-width: 768px) { .admin-badge { display: inline !important; } }
+        @media (max-width: 640px) { 
+          .layout-content { padding: 12px !important; }
+        }
       `}</style>
     </div>
   );
