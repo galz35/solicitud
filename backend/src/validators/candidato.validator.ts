@@ -35,7 +35,7 @@ export const registrarCandidatoSchema = z.object({
     banco: z.string().optional().nullable(),
     no_cuenta: z.string().optional().nullable(),
     pasaporte: z.string().optional().nullable(),
-    e_civil: z.enum(['S', 'C', 'V', 'D', 'A']),
+    e_civil: z.enum(['S', 'C', 'V', 'D', 'A']).optional().nullable().default('S'),
     
     // Salud y deportes
     penfermedad: z.enum(['S', 'N']).default('N'),
@@ -46,17 +46,17 @@ export const registrarCandidatoSchema = z.object({
     p_deporte: z.string().optional().nullable(),
     t_tarjeta: z.enum(['S', 'N']).default('N'),
     
-    // Puesto solicitado
-    puesto: z.string().min(1, 'El puesto solicitado es obligatorio.'),
+    // Puesto solicitado (opcional - se guarda en paso 6)
+    puesto: z.string().optional().nullable(),
     salario_max: z.number().positive().optional().nullable(),
     salario_min: z.number().positive().optional().nullable(),
     turno: z.string().optional().nullable(),
     obs_horario: z.string().optional().nullable(),
     experiencia: z.string().optional().nullable(),
     
-    // Contacto de emergencia
-    contacto_emer: z.string().min(1, 'El nombre del contacto de emergencia es obligatorio.'),
-    parentesco_cont: z.string().min(1, 'El parentesco del contacto de emergencia es obligatorio.'),
-    tel_contacto: z.string().min(1, 'El teléfono del contacto de emergencia es obligatorio.'),
+    // Contacto de emergencia (opcional - se guarda en paso 1 sección emergencia)
+    contacto_emer: z.string().optional().nullable(),
+    parentesco_cont: z.string().optional().nullable(),
+    tel_contacto: z.string().optional().nullable(),
   }),
 });
