@@ -528,8 +528,10 @@ export const SolicitudWizard: React.FC = () => {
               <FormField label="Municipio / Ciudad" id="ciudad_dom" as="select"
                 value={datosGenerales.ciudad_dom || ''}
                 onChange={(e: any) => setDatosGenerales({ ...datosGenerales, ciudad_dom: e.target.value })}
-                error={formErrors.ciudad_dom} required>
-                <option value="">-- Seleccione --</option>
+                error={formErrors.ciudad_dom} required
+                disabled={!datosGenerales.departamento_dom}
+                style={{ opacity: !datosGenerales.departamento_dom ? 0.5 : 1 }}>
+                <option value="">{datosGenerales.departamento_dom ? '-- Seleccione --' : 'Primero seleccione un departamento'}</option>
                 {getMunicipios(
                   departamentos.find(d => d.nombre === datosGenerales.departamento_dom)?.id || ''
                 ).map(m => (
