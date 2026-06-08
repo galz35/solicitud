@@ -10,6 +10,10 @@ export const DashboardPage: React.FC = () => {
   const isAdmin = user?.rol === 'admin';
 
   useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin', { replace: true });
+      return;
+    }
     apiService.getMe()
       .then((res: any) => setCandidato(res.data))
       .catch(() => navigate('/login'))
@@ -30,28 +34,6 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="fade-in">
-      {/* Admin banner */}
-      {isAdmin && (
-        <div style={{
-          background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
-          border: '1px solid #bbf7d0', borderRadius: 12,
-          padding: '14px 18px', marginBottom: 20,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-        }}>
-          <div>
-            <span style={{ fontSize: 18, marginRight: 8 }}>👑</span>
-            <span style={{ fontWeight: 600, color: '#166534', fontSize: 14 }}>Tienes acceso de administrador</span>
-            <span style={{ color: '#4ade80', margin: '0 8px' }}>·</span>
-            <span style={{ color: '#666', fontSize: 13 }}>Accede al panel desde el menú</span>
-          </div>
-          <button onClick={() => navigate('/admin')}
-            style={{
-              padding: '6px 16px', border: 'none', borderRadius: 8,
-              background: '#0d9488', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600
-            }}>Ir al Panel</button>
-        </div>
-      )}
-
       {/* Profile card */}
       {c && (
         <div style={{
