@@ -31,10 +31,6 @@ function WizardRoute() {
   // Not authenticated → redirect
   return <Navigate to="/login" replace />;
 }
-  const token = localStorage.getItem('token');
-  if (!token) return <Navigate to="/login" replace />;
-  return <Layout>{children}</Layout>;
-}
 
 export default function App() {
   return (
