@@ -63,6 +63,32 @@ export const SolicitudWizard: React.FC = () => {
   };
 
   // 1. CARGAR DATOS
+  const LS_KEY = 'solicitud_wizard_' + invToken;
+
+  const guardarProgress = () => {
+    if (!invToken) return;
+    try {
+      const data = {
+        datosGenerales, familiares, academicos, experiencias,
+        referencias, idiomasCandidato, puesto, currentStep
+      };
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    } catch {}
+  };
+
+  const restaurarProgress = () => {
+    if (!invToken) return null;
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  };
+
+  const limpiarProgress = () => {
+    if (!invToken) return;
+    try { localStorage.removeItem(LS_KEY); } catch {}
+  };
+
   useEffect(() => {
     const user = apiService.getCurrentUser();
 
@@ -73,10 +99,22 @@ export const SolicitudWizard: React.FC = () => {
         apiService.validarToken(invToken).then((res: any) => {
           if (res.guestToken) {
             localStorage.setItem('token', res.guestToken);
-            localStorage.setItem('candidato', JSON.stringify({
-              cedula: res.candidato?.cedula || '',
-              existe: false,
-            }));
+            localStorage.setItem('candidato', JSON.stringify({ cedula: res.candidato?.cedula || '', existe: false }));
+          }
+          // Intentar restaurar progreso guardado
+          const saved = restaurarProgress();
+          if (saved) {
+            saved.datosGenerales && setDatosGenerales(saved.datosGenerales);
+            saved.familiares && setFamiliares(saved.familiares);
+            saved.academicos && setAcademicos(saved.academicos);
+            saved.experiencias && setExperiencias(saved.experiencias);
+            saved.referencias && setReferencias(saved.referencias);
+            saved.idiomasCandidato && setIdiomasCandidato(saved.idiomasCandidato);
+            saved.puesto && setPuesto(saved.puesto);
+            saved.currentStep && setCurrentStep(saved.currentStep);
+            apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
+            setIsLoading(false);
+            return;
           }
           if (res.candidato) {
             setCedula(res.candidato.cedula);
@@ -88,50 +126,39 @@ export const SolicitudWizard: React.FC = () => {
               papellido: res.candidato.nombre?.split(' ').slice(1).join(' ') || '',
             }));
           }
-          // Cargar catálogo de idiomas
           apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
           setIsLoading(false);
-        }).catch(() => {
-          navigate('/login');
-        });
+        }).catch(() => { navigate('/login'); });
         return;
       }
       navigate('/login');
       return;
     }
-    
+
     setCedula(user.cedula);
-    
+
     const fetchData = async () => {
       try {
-        // Cargar catálogo de idiomas
         const idms = await apiService.getIdiomas();
         setCatalogoIdiomas(idms);
 
         if (user.existe) {
-          // Obtener datos del candidato de la API
           const data = await apiService.getCandidato(user.cedula);
-          
           if (data.candidato) {
-            // Unificar generales, salud, emergencia
             setDatosGenerales({
               ...data.candidato,
               ...data.saludDeportes,
               ...data.emergencia,
-              // formatear fecha a yyyy-MM-dd
               fecha_nac: data.candidato.fecha_nac ? data.candidato.fecha_nac.split('T')[0] : ''
             });
           }
-          if (data.puesto) {
-            setPuesto(data.puesto);
-          }
+          if (data.puesto) setPuesto(data.puesto);
           setFamiliares(data.familiares || []);
           setAcademicos(data.academicos || []);
           setExperiencias(data.experiencia || []);
           setReferencias(data.referencias || []);
           setIdiomasCandidato(data.idiomas || []);
         } else {
-          // Inicializar cédula en el estado
           setDatosGenerales((prev: any) => ({ ...prev, cedula: user.cedula }));
         }
       } catch (err) {
@@ -143,6 +170,9 @@ export const SolicitudWizard: React.FC = () => {
 
     fetchData();
   }, [navigate, invToken]);
+
+  // Auto-guardar progreso en localStorage cada vez que cambien los datos
+  useEffect(() => { guardarProgress(); }, [datosGenerales, familiares, academicos, experiencias, referencias, idiomasCandidato, puesto, currentStep]);
 
   if (isLoading) {
     return (
@@ -381,6 +411,9 @@ export const SolicitudWizard: React.FC = () => {
   };
 
   const handleFinalizar = async () => {
+    // Limpiar progreso guardado
+    limpiarProgress();
+
     // Si hay token de invitación, crear cuenta con el correo ingresado
     if (invToken && datosGenerales.correo) {
       try {
