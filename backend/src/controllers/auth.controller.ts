@@ -407,7 +407,7 @@ export async function generarInvitacion(req: Request, res: Response, next: NextF
         `);
     }
 
-    const link = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/registro?token=${token}`;
+    const link = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/solicitud?token=${token}`;
 
     res.status(200).json({
       status: 'success',
@@ -415,6 +415,81 @@ export async function generarInvitacion(req: Request, res: Response, next: NextF
       link,
       token,
       expira: expiracion,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
+// CREAR CUENTA DESPUÉS DEL WIZARD (invitación)
+// ==========================================
+export async function crearCuentaDesdeToken(req: Request, res: Response, next: NextFunction) {
+  const { token, email } = req.body;
+
+  try {
+    if (!token || !email) {
+      res.status(400).json({ status: 'fail', message: 'Token y email requeridos' });
+      return;
+    }
+
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+
+    // Buscar el token
+    const tokenResult = await pool
+      .request()
+      .input('token', sql.VarChar(255), token)
+      .query(`
+        SELECT candidato_id, token_expiracion 
+        FROM tbl_usuarios_candidatos 
+        WHERE token_invitacion = @token AND activo = 1
+      `);
+
+    if (tokenResult.recordset.length === 0) {
+      res.status(404).json({ status: 'fail', message: 'Token inválido' });
+      return;
+    }
+
+    const { candidato_id, token_expiracion } = tokenResult.recordset[0];
+
+    // Verificar expiración
+    if (token_expiracion && new Date(token_expiracion) < new Date()) {
+      res.status(410).json({ status: 'fail', message: 'El enlace ha expirado' });
+      return;
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Verificar email único
+    const emailCheck = await pool
+      .request()
+      .input('email', sql.VarChar(150), cleanEmail)
+      .query('SELECT id_usuario FROM tbl_usuarios_candidatos WHERE email = @email');
+
+    if (emailCheck.recordset.length > 0) {
+      res.status(409).json({ status: 'fail', message: 'Este correo ya está registrado' });
+      return;
+    }
+
+    // Actualizar usuario con el email
+    await pool
+      .request()
+      .input('candidato_id', sql.Int, candidato_id)
+      .input('email', sql.VarChar(150), cleanEmail)
+      .query(`
+        UPDATE tbl_usuarios_candidatos 
+        SET email = @email, fecha_modificacion = GETDATE()
+        WHERE candidato_id = @candidato_id
+      `);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cuenta creada exitosamente. Podés iniciar sesión con tu correo y cédula.',
     });
   } catch (error) {
     next(error);

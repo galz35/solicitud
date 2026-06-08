@@ -87,6 +87,11 @@ export const apiService = {
     return response.data;
   },
 
+  async crearCuenta(token: string, email: string) {
+    const response = await api.post('/auth/crear-cuenta', { token, email });
+    return response.data;
+  },
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('candidato');

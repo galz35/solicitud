@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Save, FileText } from 'lucide-react';
 import { StepWizard } from '../../components/wizard/StepWizard';
 import { FormField } from '../../components/ui/FormField';
@@ -11,8 +11,10 @@ import { departamentos, getMunicipios } from '../../data/nicaragua';
 
 export const SolicitudWizard: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [cedula, setCedula] = useState('');
+  const [invToken, setInvToken] = useState(searchParams.get('token') || '');
   const [isLoading, setIsLoading] = useState(true);
   
   // Notificaciones
@@ -20,7 +22,7 @@ export const SolicitudWizard: React.FC = () => {
 
   // Estados de datos
   const [datosGenerales, setDatosGenerales] = useState<any>({
-    cedula: '', pnombre: '', snombre: '', papellido: '', sapellido: '', fecha_nac: '',
+    cedula: '', correo: '', pnombre: '', snombre: '', papellido: '', sapellido: '', fecha_nac: '',
     lugar_nac: '', nacionalidad: 'Nicaragüense', inss: '', ruc: '', estatura: '', peso: '',
     licencia: 'N', cat_licencia: '', vehiculo: 'N', marca: '', ano_vehic: '',
     celular: '', telefono_dom: '', departamento_dom: '', ciudad_dom: '', direccion_dom: '',
@@ -339,8 +341,18 @@ export const SolicitudWizard: React.FC = () => {
     }
   };
 
-  const handleFinalizar = () => {
-    // Actualizar bandera de usuario y navegar al visor de impresión
+  const handleFinalizar = async () => {
+    // Si hay token de invitación, crear cuenta con el correo ingresado
+    if (invToken && datosGenerales.correo) {
+      try {
+        await apiService.crearCuenta(invToken, datosGenerales.correo);
+      } catch (e: any) {
+        // Si el error es que ya existe, igual continuar
+        if (e.response?.status !== 409) {
+          showToast('Error al crear cuenta. Podés iniciar sesión con tu correo y cédula.', 'info');
+        }
+      }
+    }
     const user = apiService.getCurrentUser();
     if (user) {
       user.existe = true;
@@ -377,6 +389,16 @@ export const SolicitudWizard: React.FC = () => {
                 value={datosGenerales.cedula} 
                 disabled 
                 required 
+              />
+              <FormField 
+                label="Correo Electrónico"
+                id="correo"
+                type="email"
+                value={datosGenerales.correo || ''}
+                onChange={(e) => setDatosGenerales({ ...datosGenerales, correo: e.target.value })}
+                error={formErrors.correo}
+                placeholder="ejemplo@correo.com"
+                required
               />
               <FormField 
                 label="Primer Nombre" 
