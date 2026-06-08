@@ -355,8 +355,14 @@ export const SolicitudWizard: React.FC = () => {
       }
 
       setIsModalOpen(false);
-    } catch (err) {
-      showToast('Error al guardar el registro.', 'error');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Error desconocido';
+      const details = err.response?.data?.errors;
+      if (details && details.length > 0) {
+        showToast(details.map((e: any) => `${e.field}: ${e.message}`).join(', '), 'error');
+      } else {
+        showToast('Error: ' + msg, 'error');
+      }
     }
   };
 
