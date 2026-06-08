@@ -34,7 +34,7 @@ export const SSOHandlerPage: React.FC = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)',
       color: 'white',
       fontSize: '1.2rem',
       fontFamily: '"Inter", sans-serif',

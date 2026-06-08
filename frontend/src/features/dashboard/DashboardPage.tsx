@@ -39,7 +39,7 @@ export const DashboardPage: React.FC = () => {
           <div style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <div style={avatarStyle}>
-                <User size={24} color="#6366f1" />
+                <User size={24} color="#0d9488" />
               </div>
               <div>
                 <h3 style={{ margin: 0 }}>

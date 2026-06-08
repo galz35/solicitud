@@ -102,7 +102,7 @@ export const RegistroPage: React.FC = () => {
     <div style={containerStyle}>
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <UserPlus size={40} color="#6366f1" />
+          <UserPlus size={40} color="#0d9488" />
           <h2 style={{ margin: '8px 0 4px' }}>Completa tu registro</h2>
           {candidatoInfo?.nombre && (
             <p style={{ color: '#64748b', fontSize: 14 }}>Bienvenido(a) {candidatoInfo.nombre}</p>
@@ -147,7 +147,7 @@ export const RegistroPage: React.FC = () => {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
-        <a href="/login" style={{ color: '#6366f1', fontSize: 14 }}>Ya tengo cuenta, iniciar sesión</a>
+        <a href="/login" style={{ color: '#0d9488', fontSize: 14 }}>Ya tengo cuenta, iniciar sesión</a>
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
@@ -160,7 +160,7 @@ const containerStyle: React.CSSProperties = {
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)',
   padding: '1.25rem',
 };
 

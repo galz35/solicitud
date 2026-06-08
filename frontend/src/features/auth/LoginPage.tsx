@@ -77,7 +77,7 @@ export const LoginPage: React.FC = () => {
     <div style={containerStyle}>
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <LogIn size={40} color="#6366f1" />
+          <LogIn size={40} color="#0d9488" />
           <h2 style={{ margin: '8px 0 4px' }}>Solicitud de Empleo</h2>
           <p style={{ color: '#64748b', fontSize: 14 }}>Inicia sesión para continuar</p>
         </div>
@@ -143,7 +143,7 @@ export const LoginPage: React.FC = () => {
         )}
 
         <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <a href="/registro" style={{ color: '#6366f1', fontSize: 14 }}>
+          <a href="/registro" style={{ color: '#0d9488', fontSize: 14 }}>
             ¿Tienes un enlace de invitación? Regístrate aquí
           </a>
         </div>
@@ -159,7 +159,7 @@ const containerStyle: React.CSSProperties = {
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)',
   padding: 20,
 };
 
@@ -197,14 +197,14 @@ const tabBtnStyle: React.CSSProperties = {
 const tabActiveStyle: React.CSSProperties = {
   background: 'white',
   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  color: '#6366f1',
+  color: '#0d9488',
   fontWeight: 600,
 };
 
 const btnStyle: React.CSSProperties = {
   width: '100%',
-  padding: '12px 24px',
-  background: '#6366f1',
+  padding: '0.75rem 1.5rem',
+  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
   color: 'white',
   border: 'none',
   borderRadius: 8,
