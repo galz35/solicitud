@@ -63,6 +63,32 @@ export const AdminDashboardPage: React.FC = () => {
         <p style={{ margin: '4px 0 0', color: '#666', fontSize: 14 }}>Gestión de solicitudes de empleo</p>
       </div>
 
+      {/* Quick Actions */}
+      <div style={{
+        background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+        borderRadius: 14, border: '1px solid #bbf7d0',
+        padding: '18px 22px', marginBottom: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12
+      }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#166534' }}>🔗 Generar link de invitación</div>
+          <div style={{ fontSize: 13, color: '#15803d', marginTop: 2 }}>
+            Creá un enlace único para que un candidato complete su solicitud
+          </div>
+        </div>
+        <button onClick={() => setTab('invitar')}
+          style={{
+            padding: '10px 24px', border: 'none', borderRadius: 10,
+            background: 'linear-gradient(135deg, #0d9488, #059669)',
+            color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(13,148,136,0.25)',
+            whiteSpace: 'nowrap'
+          }}>
+          + Nuevo Link
+        </button>
+      </div>
+
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 24 }}>
         {[
