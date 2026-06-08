@@ -80,7 +80,11 @@ export const SolicitudWizard: React.FC = () => {
   const restaurarProgress = () => {
     if (!invToken) return null;
     try {
-      const saved = localStorage.getItem(getLsKey());
+      // Primero buscar con key v2 (la actual), luego con v1
+      let saved = localStorage.getItem(getLsKey());
+      if (!saved) {
+        saved = localStorage.getItem('solicitud_wizard_' + invToken);
+      }
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   };
