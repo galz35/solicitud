@@ -123,6 +123,8 @@ export const ImprimirPage: React.FC = () => {
             <div><strong>RUC:</strong> {candidato.ruc || 'N/A'}</div>
             <div><strong>Estatura / Peso:</strong> {candidato.estatura ? `${candidato.estatura} m` : 'N/A'} / {candidato.peso ? `${candidato.peso} lbs` : 'N/A'}</div>
             <div><strong>Pasaporte:</strong> {candidato.pasaporte || 'N/A'}</div>
+            <div><strong>Cuenta Bancaria:</strong> {candidato.cuenta_banco === 'S' ? `Sí (${candidato.banco} - ${candidato.no_cuenta})` : 'No'}</div>
+            <div><strong>Tarjeta Crédito:</strong> {candidato.t_tarjeta === 'S' ? 'Sí' : 'No'}</div>
             <div style={{ gridColumn: '1 / span 2' }}><strong>Dirección Domicilio:</strong> {candidato.direccion_dom}, {candidato.ciudad_dom}, {candidato.departamento_dom} ({candidato.tipo_casa})</div>
           </div>
         </div>
@@ -163,6 +165,8 @@ export const ImprimirPage: React.FC = () => {
             <div><strong>Puesto Solicitado:</strong> {puesto?.puesto || 'N/A'}</div>
             <div><strong>Turno Preferible:</strong> {puesto?.turno || 'N/A'}</div>
             <div><strong>Salario Mínimo Aceptable:</strong> {puesto?.salario_min ? `C$ ${puesto.salario_min}` : 'N/A'}</div>
+            <div><strong>Salario Máximo Pretendido:</strong> {puesto?.salario_max ? `C$ ${puesto.salario_max}` : 'N/A'}</div>
+            <div style={{ gridColumn: '1 / span 3' }}><strong>Observaciones Horario:</strong> {puesto?.obs_horario || 'N/A'}</div>
           </div>
           {puesto?.experiencia && (
             <div style={{ fontSize: '0.9rem' }}>

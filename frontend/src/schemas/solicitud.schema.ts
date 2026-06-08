@@ -4,9 +4,8 @@ const cedulaRegex = /^\d{13}[A-Z]$/;
 
 // Paso 1: Datos Generales
 export const datosGeneralesSchema = z.object({
-  cedula: z.string().regex(cedulaRegex, {
-    message: 'Formato incorrecto. Ej: 0012508900012A (13 números y 1 letra mayúscula)',
-  }),
+  cedula: z.string().min(1, 'La cédula es obligatoria'),
+  //.regex(cedulaRegex, { message: 'Formato incorrecto. Ej: 0012508900012A' }),
   pnombre: z.string().min(1, 'El primer nombre es obligatorio'),
   snombre: z.string().optional().nullable(),
   papellido: z.string().min(1, 'El primer apellido es obligatorio'),
