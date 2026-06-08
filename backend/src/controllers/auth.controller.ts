@@ -329,7 +329,7 @@ export async function loginEmailCedula(req: Request, res: Response, next: NextFu
 // GENERAR TOKEN DE INVITACIÓN (admin)
 // ==========================================
 export async function generarInvitacion(req: Request, res: Response, next: NextFunction) {
-  const { cedula, nombres, apellidos, celular, dias_expiracion } = req.body;
+  const { cedula: rawCedula, nombres, apellidos, celular, dias_expiracion } = req.body;
 
   try {
     if (isUsingFallback()) {
@@ -340,7 +340,13 @@ export async function generarInvitacion(req: Request, res: Response, next: NextF
     const pool = await getConnectionPool();
     const token = crypto.randomBytes(32).toString('hex');
     const expiracion = new Date();
-    expiracion.setDate(expiracion.getDate() + (dias_expiracion || 7));
+    expiracion.setDate(expiracion.getDate() + (dias_expiracion || 2));
+
+    // Si no se proporciona cédula, generar una automática
+    let cedula = rawCedula?.trim().toUpperCase();
+    if (!cedula) {
+      cedula = `TMP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    }
 
     // Buscar si el candidato ya existe por cédula
     let candidatoId: number;

@@ -91,7 +91,7 @@ export const registroSchema = z.object({
 // 9. VALIDACIÓN DE INVITACIÓN (admin)
 export const invitacionSchema = z.object({
   body: z.object({
-    cedula: z.string().min(1, 'Cédula requerida'),
+    cedula: z.string().optional().nullable(),
     nombres: z.string().optional().nullable(),
     apellidos: z.string().optional().nullable(),
     celular: z.string().optional().nullable(),

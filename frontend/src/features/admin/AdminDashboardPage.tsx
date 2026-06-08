@@ -43,7 +43,17 @@ export const AdminDashboardPage: React.FC = () => {
     if (!invCedula) { showToast('Cédula requerida', 'warning'); return; }
     setInvLoading(true);
     try {
-      const res = await apiService.generarInvitacion(invCedula, invNombres, invApellidos, invCelular, 30);
+      const res = await apiService.generarInvitacion(invCedula, invNombres, invApellidos, invCelular, 2);
+      setInvLink(res.link);
+      showToast('Link generado ✅', 'success');
+    } catch (e: any) { showToast(e.response?.data?.message || 'Error', 'error'); }
+    finally { setInvLoading(false); }
+  };
+
+  const generarLinkRapido = async () => {
+    setInvLoading(true);
+    try {
+      const res = await apiService.generarInvitacion('', '', '', '', 2);
       setInvLink(res.link);
       showToast('Link generado ✅', 'success');
     } catch (e: any) { showToast(e.response?.data?.message || 'Error', 'error'); }
@@ -67,26 +77,51 @@ export const AdminDashboardPage: React.FC = () => {
       <div style={{
         background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
         borderRadius: 14, border: '1px solid #bbf7d0',
-        padding: '18px 22px', marginBottom: 24,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12
+        padding: '20px 24px', marginBottom: 24,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
       }}>
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#166534' }}>🔗 Generar link de invitación</div>
-          <div style={{ fontSize: 13, color: '#15803d', marginTop: 2 }}>
-            Creá un enlace único para que un candidato complete su solicitud
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: invLink ? 16 : 0 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#166534' }}>🔗 Generar link de invitación</div>
+            <div style={{ fontSize: 13, color: '#15803d', marginTop: 2 }}>
+              Creá un enlace único para que el candidato complete su solicitud (válido por 2 días)
+            </div>
           </div>
+          <button onClick={generarLinkRapido} disabled={invLoading}
+            style={{
+              padding: '10px 28px', border: 'none', borderRadius: 10,
+              background: 'linear-gradient(135deg, #0d9488, #059669)',
+              color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+              boxShadow: '0 2px 8px rgba(13,148,136,0.25)',
+              whiteSpace: 'nowrap', opacity: invLoading ? 0.7 : 1
+            }}>
+            {invLoading ? '⏳ Generando...' : '🎯 Generar Link'}
+          </button>
         </div>
-        <button onClick={() => setTab('invitar')}
-          style={{
-            padding: '10px 24px', border: 'none', borderRadius: 10,
-            background: 'linear-gradient(135deg, #0d9488, #059669)',
-            color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
-            boxShadow: '0 2px 8px rgba(13,148,136,0.25)',
-            whiteSpace: 'nowrap'
+
+        {invLink && (
+          <div style={{
+            padding: 16, background: '#fff', borderRadius: 10,
+            border: '1px solid #bbf7d0', marginTop: 4
           }}>
-          + Nuevo Link
-        </button>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#166534', marginBottom: 8 }}>✅ Link generado exitosamente</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input readOnly value={invLink}
+                style={{ flex: 1, padding: '10px 12px', border: '1px solid #bbf7d0', borderRadius: 8, fontSize: 12, background: '#f0fdf4', color: '#333' }} />
+              <button onClick={() => {
+                navigator.clipboard.writeText(invLink).then(() => {
+                  showToast('Link copiado 📋', 'success');
+                });
+              }}
+                style={{
+                  padding: '10px 18px', border: 'none', borderRadius: 8,
+                  background: '#0d9488', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600
+                }}>
+                Copiar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
