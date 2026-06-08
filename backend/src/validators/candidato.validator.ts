@@ -6,7 +6,7 @@ export const registrarCandidatoSchema = z.object({
   body: z.object({
     cedula: z.string().min(1, 'La cédula es obligatoria'),
     //.regex(cedulaRegex, { message: 'La cédula debe constar de 13 números seguidos de una letra mayúscula.' }),
-    correo: z.string().email('Correo inválido').optional().nullable(),
+    correo: z.union([z.literal(''), z.string().email('Correo inválido')]).optional().nullable(),
     pnombre: z.string().min(1, 'El primer nombre es obligatorio.'),
     snombre: z.string().optional().nullable(),
     papellido: z.string().min(1, 'El primer apellido es obligatorio.'),
