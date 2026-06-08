@@ -424,15 +424,11 @@ export const SolicitudWizard: React.FC = () => {
   };
 
   const handleFinalizar = async () => {
-    // Limpiar progreso guardado
-    limpiarProgress();
-
     // Si hay token de invitación, crear cuenta con el correo ingresado
     if (invToken && datosGenerales.correo) {
       try {
         await apiService.crearCuenta(invToken, datosGenerales.correo);
       } catch (e: any) {
-        // Si el error es que ya existe, igual continuar
         if (e.response?.status !== 409) {
           showToast('Error al crear cuenta. Podés iniciar sesión con tu correo y cédula.', 'info');
         }
@@ -443,7 +439,12 @@ export const SolicitudWizard: React.FC = () => {
       user.existe = true;
       localStorage.setItem('candidato', JSON.stringify(user));
     }
-    navigate(`/imprimir/${cedula || datosGenerales.cedula}`);
+    // Limpiar progreso guardado y redirigir a impresión
+    limpiarProgress();
+    showToast('✅ Solicitud guardada exitosamente', 'success');
+    setTimeout(() => {
+      navigate(`/imprimir/${cedula || datosGenerales.cedula}`);
+    }, 800);
   };
 
   return (
