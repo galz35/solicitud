@@ -73,6 +73,15 @@ export const apiService = {
     return response.data;
   },
 
+  async ssoPortal(ssoToken: string) {
+    const response = await api.post('/auth/sso-portal', { ssoToken });
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('candidato', JSON.stringify(response.data.candidato));
+    }
+    return response.data;
+  },
+
   async registro(token: string, email: string, password: string) {
     const response = await api.post('/auth/registro', { token, email, password });
     return response.data;

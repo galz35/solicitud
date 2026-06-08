@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { getConnectionPool, isUsingFallback, memoryDb, sql } from '../config/database';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sel3Rh2026_super_secret_token_key_for_authentication';
+const SSO_SECRET = process.env.SSO_SECRET || 'ClaroSSO_Shared_Secret_2026_!#';
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '2h';
 const ADMIN_CEDULA = '0000000000000A';
 
@@ -394,6 +395,122 @@ export async function generarInvitacion(req: Request, res: Response, next: NextF
       link,
       token,
       expira: expiracion,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
+// SSO LOGIN DESDE PORTAL (verifica token del portal)
+// ==========================================
+export async function ssoPortalLogin(req: Request, res: Response, next: NextFunction) {
+  const { ssoToken } = req.body;
+
+  try {
+    if (!ssoToken) {
+      res.status(400).json({ status: 'fail', message: 'Token SSO requerido' });
+      return;
+    }
+
+    // Verificar token con el secreto compartido del portal
+    let decoded: any;
+    try {
+      decoded = jwt.verify(ssoToken, SSO_SECRET);
+    } catch (e) {
+      res.status(401).json({ status: 'fail', message: 'Token SSO inválido o expirado' });
+      return;
+    }
+
+    const cedula = decoded.carnet || decoded.username || String(decoded.sub);
+    const email = decoded.correo || '';
+    const nombre = decoded.name || '';
+    const apps = decoded.apps || [];
+
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+
+    // Buscar candidato por cédula
+    let candidatoId: number | null = null;
+    const existingCand = await pool
+      .request()
+      .input('cedula', sql.VarChar(20), cedula)
+      .query('SELECT candidato_id FROM tbl_candidatos WHERE cedula = @cedula');
+
+    if (existingCand.recordset.length > 0) {
+      candidatoId = existingCand.recordset[0].candidato_id;
+    } else {
+      // Crear candidato automáticamente
+      const nombreParts = nombre.split(' ');
+      const pnombre = nombreParts[0] || cedula;
+      const papellido = nombreParts.slice(1).join(' ') || cedula;
+
+      const newCand = await pool
+        .request()
+        .input('cedula', sql.VarChar(20), cedula)
+        .input('pnombre', sql.VarChar(50), pnombre)
+        .input('papellido', sql.VarChar(50), papellido)
+        .input('fecha_nac', sql.Date, '1990-01-01')
+        .input('nacionalidad', sql.VarChar(50), 'Nicaragüense')
+        .input('e_civil', sql.Char(1), 'S')
+        .query(`
+          INSERT INTO tbl_candidatos (cedula, pnombre, papellido, fecha_nac, nacionalidad, e_civil)
+          OUTPUT INSERTED.candidato_id
+          VALUES (@cedula, @pnombre, @papellido, @fecha_nac, @nacionalidad, @e_civil)
+        `);
+      candidatoId = newCand.recordset[0].candidato_id;
+    }
+
+    // Asegurar que exista en tbl_usuarios_candidatos
+    const existingUser = await pool
+      .request()
+      .input('candidato_id', sql.Int, candidatoId)
+      .query('SELECT id_usuario FROM tbl_usuarios_candidatos WHERE candidato_id = @candidato_id');
+
+    if (existingUser.recordset.length === 0) {
+      await pool
+        .request()
+        .input('candidato_id', sql.Int, candidatoId)
+        .input('email', sql.VarChar(150), email)
+        .query(`
+          INSERT INTO tbl_usuarios_candidatos (candidato_id, email, password_hash)
+          VALUES (@candidato_id, @email, '')
+        `);
+    } else if (email && existingUser.recordset.length > 0) {
+      // Actualizar email si está vacío
+      await pool
+        .request()
+        .input('candidato_id', sql.Int, candidatoId)
+        .input('email', sql.VarChar(150), email)
+        .query(`
+          UPDATE tbl_usuarios_candidatos SET email = @email, fecha_modificacion = GETDATE()
+          WHERE candidato_id = @candidato_id AND (email IS NULL OR email = '')
+        `);
+    }
+
+    // Generar token de solicitud
+    const token = jwt.sign({
+      cedula,
+      candidato_id: candidatoId,
+      email,
+      method: 'sso_portal',
+    }, JWT_SECRET, { expiresIn: '2h' });
+
+    res.status(200).json({
+      status: 'success',
+      token,
+      candidato: {
+        cedula,
+        candidato_id: candidatoId,
+        nombre,
+        email,
+        existe: true,
+        apps,
+      },
     });
   } catch (error) {
     next(error);

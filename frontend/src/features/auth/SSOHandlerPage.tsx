@@ -5,37 +5,27 @@ import { apiService } from '../../services/api.service';
 export const SSOHandlerPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('Procesando...');
+  const [status, setStatus] = useState('Iniciando sesión...');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token) {
+    const ssoToken = searchParams.get('token');
+    if (!ssoToken) {
       setStatus('Token no proporcionado');
       setTimeout(() => navigate('/login'), 2000);
       return;
     }
 
-    // Decodificar el token JWT del portal (solo lectura, no verificación)
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const cedula = payload.carnet || payload.username || payload.sub;
-
-      // Guardar en localStorage como si fuera login manual
-      localStorage.setItem('token', token);
-      localStorage.setItem('candidato', JSON.stringify({
-        cedula,
-        email: payload.correo || '',
-        nombre: payload.name || '',
-        existe: true,
-        apps: payload.apps || [],
-      }));
-
-      setStatus(`Bienvenido ${payload.name || ''}`);
-      setTimeout(() => navigate('/dashboard'), 1000);
-    } catch (e) {
-      setStatus('Error al procesar el token');
-      setTimeout(() => navigate('/login'), 2000);
-    }
+    const handleSSO = async () => {
+      try {
+        const res = await apiService.ssoPortal(ssoToken);
+        setStatus(`Bienvenido ${res.candidato.nombre || ''}`);
+        setTimeout(() => navigate('/dashboard'), 1000);
+      } catch (e: any) {
+        setStatus('Error al iniciar sesión. Redirigiendo...');
+        setTimeout(() => navigate('/login'), 2000);
+      }
+    };
+    handleSSO();
   }, [searchParams, navigate]);
 
   return (

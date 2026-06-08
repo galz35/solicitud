@@ -29,6 +29,7 @@ router.post('/auth/login', validate(loginSchema), authController.login);
 router.post('/auth/login-email', validate(loginEmailSchema), authController.loginEmail);
 router.post('/auth/registro', validate(registroSchema), authController.registro);
 router.post('/auth/login-email-cedula', authController.loginEmailCedula);
+router.post('/auth/sso-portal', authController.ssoPortalLogin);
 router.get('/auth/validar-token/:token', authController.validarToken);
 
 
