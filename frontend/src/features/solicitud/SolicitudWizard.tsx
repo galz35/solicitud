@@ -82,7 +82,7 @@ export const SolicitudWizard: React.FC = () => {
             setCedula(res.candidato.cedula);
             setDatosGenerales((prev: any) => ({
               ...prev,
-              cedula: res.candidato.cedula,
+              cedula: '',
               correo: res.candidato.email || '',
               pnombre: res.candidato.nombre?.split(' ')[0] || '',
               papellido: res.candidato.nombre?.split(' ').slice(1).join(' ') || '',
