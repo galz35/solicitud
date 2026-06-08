@@ -192,8 +192,17 @@ export const SolicitudWizard: React.FC = () => {
       try {
         await apiService.guardarCandidato(datosGenerales);
         showToast('Datos generales guardados temporalmente.', 'success');
-      } catch (err) {
-        showToast('Error al guardar datos en el servidor.', 'error');
+      } catch (err: any) {
+        const msg = err.response?.data?.message || err.message || 'Error desconocido';
+        const details = err.response?.data?.errors;
+        if (details && details.length > 0) {
+          const errs: any = {};
+          details.forEach((e: any) => { errs[e.field] = e.message; });
+          setFormErrors(errs);
+          showToast(details.map((e: any) => `${e.field}: ${e.message}`).join(', '), 'error');
+        } else {
+          showToast('Error al guardar: ' + msg, 'error');
+        }
         return;
       }
     }
