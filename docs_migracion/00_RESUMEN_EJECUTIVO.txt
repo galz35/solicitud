@@ -1,0 +1,79 @@
+================================================================================
+  PLAN DE MIGRACIÓN: SOLICITUD DE EMPLEO (ASP CLÁSICO → REACT)
+  HOJA DE RUTA Y RESUMEN EJECUTIVO
+  Fecha: 08/06/2026
+================================================================================
+
+1. INTRODUCCIÓN Y ESTRUCTURA DE LA DOCUMENTACIÓN
+================================================================================
+Este documento sirve como guía principal e índice del plan de migración tecnológica
+para el sistema "Solicitud de Empleo". El objetivo es reemplazar el sistema legacy
+basado en ASP Clásico por una arquitectura moderna, segura, escalable y con una
+experiencia de usuario óptima utilizando React en el frontend y una API REST en el backend.
+
+Se ha generado una suite de 6 documentos detallados que cubren cada aspecto de la
+migración. A continuación se describe el contenido de cada uno y su propósito:
+
+  ARCHIVO DE PLANIFICACIÓN / ANÁLISIS       | CONTENIDO Y PROPÓSITO
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  01_ANALISIS_SISTEMA_ACTUAL.txt            | Inventario de código ASP, arquitectura actual,
+                                            | reglas de negocio y vulnerabilidades críticas.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  02_PLAN_DE_TRABAJO.txt                    | Fases del proyecto, cronograma estimado,
+                                            | entregables, hitos y plan de pruebas.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  03_DISENO_UX_EXPERIENCIA_USUARIO.txt      | Guía de diseño visual, flujos del usuario,
+                                            | prototipado del Wizard, accesibilidad y UI/UX.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  04_BASE_DE_DATOS.txt                      | Modelo relacional actual, nueva estructura
+                                            | normalizada, Stored Procedures y migraciones.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  05_MEJORAS_Y_NUEVAS_FUNCIONALIDADES.txt  | Mejoras de seguridad, técnicas, de negocio y
+                                            | catálogo de validación moderno.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+  06_MAPEO_COMPONENTES_ASP_A_REACT.txt      | Equivalencia uno-a-uno de archivos ASP, JS
+                                            | y consultas SQL a componentes React y APIs.
+  ──────────────────────────────────────────┼───────────────────────────────────────
+
+2. ESTRATEGIA TECNOLÓGICA PROPUESTA (STACK MODERNO)
+================================================================================
+Para la reescritura total del sistema, se propone el siguiente stack técnico:
+
+  - FRONTEND: React.js (Vite o Next.js) + TypeScript
+    * Tailwind CSS o CSS Modules para un diseño premium, responsive y fluido.
+    * React Hook Form + Zod para validaciones robustas del lado del cliente.
+    * Axios + React Query (TanStack Query) para el manejo de estado de datos y caché.
+    * Lucid React / Heroicons para iconografía moderna.
+
+  - BACKEND: API REST (Node.js/Express, ASP.NET Core o Python FastAPI)
+    * Arquitectura limpia en capas (Controladores, Servicios, Repositorios).
+    * Seguridad: Autenticación basada en JWT, encriptación de datos sensibles.
+    * Validación de inputs redundante en servidor.
+
+  - BASE DE DATOS: SQL Server (Existente pero modernizada)
+    * Normalización de tablas (tbl_DGenerales dividida lógicamente).
+    * Implementación de Stored Procedures para encapsular lógica de negocio SQL.
+    * Migraciones versionadas (DbUp o Entity Framework Migrations).
+
+3. PRINCIPALES BENEFICIOS DE LA MIGRACIÓN
+================================================================================
+  - SEGURIDAD: Eliminación completa de SQL Injection, credenciales quemadas en código
+    y ataques XSS. Introducción de autenticación segura.
+  - RESPONSIVIDAD (MOBILE FIRST): El candidato podrá llenar su solicitud cómodamente
+    desde cualquier teléfono inteligente o tablet.
+  - MANTENIBILIDAD: De un archivo monolítico de más de 2,000 líneas a componentes
+    modulares menores a 200 líneas fáciles de leer, testear y extender.
+  - REDUCCIÓN DE ERRORES: Validación en tiempo real y paso a paso en el formulario
+    evitando que el usuario envíe datos erróneos o incompletos.
+  - AUDITORÍA Y CONTROL: Registro de modificaciones (auditoría en BD) para saber qué
+    y cuándo se actualizó la información de un candidato.
+
+4. PRÓXIMOS PASOS
+================================================================================
+  1. Revisión y Aprobación: Validar estos 7 documentos de planificación con el
+     equipo técnico y stakeholders del negocio.
+  2. Configuración del Repositorio y Entornos: Configurar el entorno de desarrollo,
+     repositorio Git y base de datos de staging.
+  3. Inicialización del Frontend: Crear la estructura base del proyecto React.
+  4. Desarrollo del Backend API: Iniciar con los endpoints base y Stored Procedures.
+  5. Construcción Iterativa: Desarrollar módulo por módulo según el Plan de Trabajo.

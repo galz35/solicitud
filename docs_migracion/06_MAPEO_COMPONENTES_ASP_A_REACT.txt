@@ -1,0 +1,141 @@
+================================================================================
+  MAPEO DE COMPONENTES: ASP CLÁSICO → REACT
+  Guía de Equivalencias para Migración
+  Fecha: 08/06/2026
+================================================================================
+
+1. MAPEO DE ARCHIVOS ASP → COMPONENTES REACT
+================================================================================
+
+  ARCHIVO ASP ACTUAL       → COMPONENTE REACT EQUIVALENTE
+  ─────────────────────────┬──────────────────────────────────────
+  index.asp                → features/auth/LoginPage.tsx
+                           → features/auth/useAuth.ts
+                           → features/auth/authService.ts
+  ─────────────────────────┼──────────────────────────────────────
+  solicitud.asp            → features/solicitud/SolicitudWizard.tsx
+    (sección instrucciones)  → components/wizard/StepWizard.tsx
+    (sección dgenerales)     → features/solicitud/steps/DatosGeneralesStep.tsx
+    (sección dfamiliares)    → features/solicitud/steps/DatosFamiliaresStep.tsx
+    (sección dacademicos)    → features/solicitud/steps/DatosAcademicosStep.tsx
+    (sección idiomas)        → features/solicitud/steps/IdiomasStep.tsx
+    (sección eprofesional)   → features/solicitud/steps/ExperienciaStep.tsx
+    (sección puesto)         → features/solicitud/steps/PuestoStep.tsx
+    (sección referencias)    → features/solicitud/steps/ReferenciasStep.tsx
+    (sección refinternas)    → (integrado en ReferenciasStep.tsx)
+    (sección deportes)       → (integrado en DatosGeneralesStep.tsx)
+    (POST handler)           → backend/controllers/candidato.controller.ts
+  ─────────────────────────┼──────────────────────────────────────
+  imp_solicitud.asp        → features/impresion/ImprimirPage.tsx
+                           → features/impresion/SolicitudPDF.tsx
+  ─────────────────────────┼──────────────────────────────────────
+  buscar.asp               → features/busqueda/BuscarPage.tsx
+                           → features/busqueda/useBusqueda.ts
+  ─────────────────────────┼──────────────────────────────────────
+  dacad.asp (popup)        → components/ui/Modal.tsx (reutilizable)
+  dfamiliar.asp (popup)    → (inline en DatosFamiliaresStep.tsx)
+  eprofesional.asp (popup) → (inline en ExperienciaStep.tsx)
+  referencias.asp (popup)  → (inline en ReferenciasStep.tsx)
+  chcedula.asp (popup)     → (inline en BuscarPage.tsx)
+  instrucciones.asp        → (integrado en StepWizard.tsx como tooltip)
+  ─────────────────────────┼──────────────────────────────────────
+  saveda.asp               → backend/controllers/academico.controller.ts
+  savedf.asp               → backend/controllers/familiar.controller.ts
+  saveep.asp               → backend/controllers/experiencia.controller.ts
+  saveref.asp              → backend/controllers/referencia.controller.ts
+  ─────────────────────────┼──────────────────────────────────────
+  css/estilo.css           → styles/globals.css + variables.css
+  js/funciones.js          → schemas/ (validaciones con Zod)
+                           → lib/utils.ts (utilidades)
+  ─────────────────────────┼──────────────────────────────────────
+  web.config               → .env + vite.config.ts + Dockerfile
+
+2. MAPEO DE FUNCIONES JAVASCRIPT
+================================================================================
+
+  FUNCIÓN JS ACTUAL                → REEMPLAZO REACT
+  ─────────────────────────────────┬──────────────────────────────
+  Valida_Dato(event, tipo)         → Zod schema + React Hook Form
+  formato(element, opt)            → Zod regex validators
+  esFechaValida(fecha)             → DatePicker component (sin texto libre)
+  FechaValida(fecha)               → DatePicker component
+  comprobarSiBisisesto(anio)       → date-fns / dayjs (librería)
+  vacio(q)                         → Zod .min(1) validator
+  validavacio(F)                   → React Hook Form required rule
+  validacombo(F)                   → SelectField required validator
+  validar_dg(theForm)              → datosGeneralesSchema (Zod)
+  validar_dgg(theForm)             → schema validation
+  validar_puesto(theForm)          → puestoSchema (Zod)
+  textCounter(field,count,max)     → CharCounter component + maxLength
+  ventana(url)                     → Modal component (no más popups)
+  ini() / parar() (timeout)       → useIdleTimer hook (npm)
+  actualizar()                     → React Query invalidateQueries()
+  recarga_padre_y_cierra_ventana() → ELIMINADO (no más popups)
+  mensaje()                        → Toast notification component
+
+3. MAPEO DE CONSULTAS SQL
+================================================================================
+
+  SQL ACTUAL (EN ASP)               → NUEVO (API + STORED PROC)
+  ─────────────────────────────────┬──────────────────────────────
+  SELECT * FROM tbl_DGenerales     → GET /api/candidatos/:cedula
+    WHERE cedula = '...'           →   sp_ObtenerCandidato @cedula
+  ─────────────────────────────────┼──────────────────────────────
+  DELETE + INSERT tbl_dgenerales   → PUT /api/candidatos/:cedula
+    (6 veces duplicado)            →   sp_ActualizarCandidato @params
+  ─────────────────────────────────┼──────────────────────────────
+  INSERT tbl_dacademicos           → POST /api/candidatos/:cedula/academicos
+                                   →   sp_InsertarAcademico @params
+  ─────────────────────────────────┼──────────────────────────────
+  SELECT FROM tbl_dacademicos      → GET /api/candidatos/:cedula/academicos
+    WHERE cedula='...'             →   sp_ObtenerAcademicos @cedula
+  ─────────────────────────────────┼──────────────────────────────
+  INSERT tbl_dfamiliares           → POST /api/candidatos/:cedula/familiares
+  SELECT FROM tbl_dfamiliares      → GET /api/candidatos/:cedula/familiares
+  ─────────────────────────────────┼──────────────────────────────
+  INSERT tbl_eprofesional          → POST /api/candidatos/:cedula/experiencia
+  SELECT FROM tbl_eprofesional     → GET /api/candidatos/:cedula/experiencia
+  ─────────────────────────────────┼──────────────────────────────
+  INSERT tbl_referencias           → POST /api/candidatos/:cedula/referencias
+  SELECT FROM tbl_referencias      → GET /api/candidatos/:cedula/referencias
+  ─────────────────────────────────┼──────────────────────────────
+  SELECT FROM tbl_idiomas          → GET /api/catalogos/idiomas
+  INSERT tbl_candidato_idioma      → POST /api/candidatos/:cedula/idiomas
+  ─────────────────────────────────┼──────────────────────────────
+  LIKE '%nombre%' en buscar.asp    → GET /api/buscar?nombre=xxx&page=1
+                                   →   sp_BuscarCandidatos @nombre, @page
+
+4. MAPEO DE SESIONES Y ESTADO
+================================================================================
+
+  ESTADO ASP ACTUAL                → ESTADO REACT
+  ─────────────────────────────────┬──────────────────────────────
+  Session("cedula")                → JWT token en httpOnly cookie
+                                   → AuthContext.cedula
+  ─────────────────────────────────┼──────────────────────────────
+  Session("candidato") en buscar   → URL query param ?q=nombre
+                                   → useBusqueda hook state
+  ─────────────────────────────────┼──────────────────────────────
+  Request.Form("campo")           → React Hook Form values
+                                   → FormData en state
+  ─────────────────────────────────┼──────────────────────────────
+  request.form("Accion")          → Router navigation
+                                   → onClick handlers
+  ─────────────────────────────────┼──────────────────────────────
+  Hidden inputs (acciones, radiod) → React state (useState/useReducer)
+  ─────────────────────────────────┼──────────────────────────────
+  Response.Redirect("...")         → navigate("/ruta") de React Router
+
+5. RESUMEN DE REDUCCIÓN DE CÓDIGO
+================================================================================
+
+  MÉTRICA                  │ ANTES (ASP)    │ DESPUÉS (React)
+  ─────────────────────────┼────────────────┼────────────────
+  Archivos totales         │ 16             │ 60+ (modulares)
+  Líneas totales           │ ~5,000         │ ~4,000 (pero organizadas)
+  Archivo más grande       │ 2,057 líneas   │ <200 líneas max
+  Duplicación de código    │ 60%+           │ <5%
+  Código SQL inline        │ 30+ queries    │ 0 (todo en API)
+  Código de validación     │ 1 archivo JS   │ 7 esquemas Zod
+  Componentes reutilizables│ 0              │ 15+ componentes
+  Tests                    │ 0              │ 50+ tests

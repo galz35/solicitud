@@ -1,0 +1,428 @@
+================================================================================
+  PLAN DE MIGRACIÓN A REACT - SOLICITUD DE EMPLEO
+  De: ASP Clásico → React 18+ / Node.js / SQL Server
+  Fecha: 08/06/2026
+================================================================================
+
+1. VISIÓN GENERAL DE LA MIGRACIÓN
+================================================================================
+
+1.1 Stack Objetivo:
+  ┌─────────────────────────────────────────────────────────┐
+  │  FRONTEND (React + Vite)                                │
+  │  ├── React 18+ con TypeScript                           │
+  │  ├── React Router v6 (navegación SPA)                   │
+  │  ├── React Hook Form + Zod (formularios + validación)   │
+  │  ├── TanStack Query (React Query) (fetching de datos)   │
+  │  ├── Zustand o Context API (estado global)              │
+  │  ├── CSS Modules o Styled Components                    │
+  │  └── Vite (bundler + dev server)                        │
+  ├─────────────────────────────────────────────────────────┤
+  │  BACKEND (Node.js API REST)                             │
+  │  ├── Express.js o Fastify                               │
+  │  ├── TypeScript                                         │
+  │  ├── mssql (driver SQL Server nativo)                   │
+  │  ├── Joi / Zod (validación server-side)                 │
+  │  ├── JWT + bcrypt (autenticación)                       │
+  │  ├── Helmet + CORS (seguridad)                          │
+  │  ├── Winston (logging)                                  │
+  │  └── Swagger/OpenAPI (documentación API)                │
+  ├─────────────────────────────────────────────────────────┤
+  │  BASE DE DATOS (SQL Server)                             │
+  │  ├── Esquema normalizado (3FN)                          │
+  │  ├── Stored Procedures                                  │
+  │  ├── Foreign Keys + Constraints                         │
+  │  ├── Índices optimizados                                │
+  │  └── Migración de datos existentes                      │
+  └─────────────────────────────────────────────────────────┘
+
+2. FASES DEL PROYECTO
+================================================================================
+
+═══════════════════════════════════════════════════════════════════
+  FASE 1: PREPARACIÓN Y DISEÑO (Semana 1-2)
+═══════════════════════════════════════════════════════════════════
+
+  1.1 Diseño de Base de Datos normalizada
+      - Crear nuevo esquema (ver documento 04_BASE_DATOS.txt)
+      - Escribir scripts de migración de datos
+      - Crear stored procedures
+
+  1.2 Diseño de API REST
+      - Definir endpoints (ver sección 3)
+      - Documentar con OpenAPI/Swagger
+      - Definir modelos de datos y DTOs
+
+  1.3 Diseño UI/UX
+      - Wireframes en Figma
+      - Sistema de diseño (colores, tipografía, componentes)
+      - Prototipo navegable
+      - (ver documento 03_DISENO_UX.txt)
+
+  Entregables:
+    ☐ Esquema de BD normalizado + scripts
+    ☐ Especificación API (OpenAPI YAML)
+    ☐ Mockups UI aprobados
+    ☐ Estructura de proyecto React creada
+
+═══════════════════════════════════════════════════════════════════
+  FASE 2: BACKEND - API REST (Semana 3-4)
+═══════════════════════════════════════════════════════════════════
+
+  2.1 Setup del proyecto backend
+      - Inicializar proyecto Node.js + TypeScript
+      - Configurar ESLint, Prettier
+      - Configurar conexión a SQL Server
+      - Variables de entorno (.env)
+
+  2.2 Implementar endpoints:
+      ☐ POST   /api/auth/login          (login por cédula)
+      ☐ POST   /api/auth/logout
+      ☐ GET    /api/candidatos/:cedula   (obtener solicitud completa)
+      ☐ POST   /api/candidatos           (crear nueva solicitud)
+      ☐ PUT    /api/candidatos/:cedula   (actualizar datos generales)
+      ☐ GET    /api/candidatos/:cedula/familiares
+      ☐ POST   /api/candidatos/:cedula/familiares
+      ☐ PUT    /api/candidatos/:cedula/familiares/:id
+      ☐ DELETE /api/candidatos/:cedula/familiares/:id
+      ☐ GET    /api/candidatos/:cedula/academicos
+      ☐ POST   /api/candidatos/:cedula/academicos
+      ☐ PUT    /api/candidatos/:cedula/academicos/:id
+      ☐ DELETE /api/candidatos/:cedula/academicos/:id
+      ☐ GET    /api/candidatos/:cedula/idiomas
+      ☐ POST   /api/candidatos/:cedula/idiomas
+      ☐ DELETE /api/candidatos/:cedula/idiomas/:id
+      ☐ GET    /api/candidatos/:cedula/experiencia
+      ☐ POST   /api/candidatos/:cedula/experiencia
+      ☐ PUT    /api/candidatos/:cedula/experiencia/:id
+      ☐ DELETE /api/candidatos/:cedula/experiencia/:id
+      ☐ GET    /api/candidatos/:cedula/referencias
+      ☐ POST   /api/candidatos/:cedula/referencias
+      ☐ PUT    /api/candidatos/:cedula/referencias/:id
+      ☐ DELETE /api/candidatos/:cedula/referencias/:id
+      ☐ GET    /api/catalogos/nacionalidades
+      ☐ GET    /api/catalogos/idiomas
+      ☐ GET    /api/catalogos/niveles-academicos
+      ☐ GET    /api/catalogos/estados-civiles
+      ☐ GET    /api/catalogos/tipos-sangre
+      ☐ GET    /api/catalogos/bancos
+      ☐ GET    /api/buscar?nombre=xxx     (búsqueda candidatos)
+      ☐ GET    /api/candidatos/:cedula/imprimir (datos para PDF)
+
+  2.3 Middleware y seguridad:
+      ☐ JWT authentication middleware
+      ☐ Rate limiting
+      ☐ Input validation middleware
+      ☐ Error handling middleware
+      ☐ Request logging
+      ☐ CORS configuration
+
+  2.4 Testing:
+      ☐ Unit tests con Jest/Vitest
+      ☐ Integration tests de endpoints
+      ☐ Postman collection
+
+  Entregables:
+    ☐ API REST funcionando con todos los endpoints
+    ☐ Documentación Swagger
+    ☐ Suite de tests (>80% coverage)
+    ☐ Collection de Postman
+
+═══════════════════════════════════════════════════════════════════
+  FASE 3: FRONTEND - REACT (Semana 5-7)
+═══════════════════════════════════════════════════════════════════
+
+  3.1 Setup del proyecto frontend
+      ☐ npx create-vite solicitud-empleo-app --template react-ts
+      ☐ Configurar React Router
+      ☐ Configurar React Query
+      ☐ Instalar dependencias UI
+      ☐ Crear sistema de diseño (tokens CSS)
+      ☐ Configurar ESLint + Prettier
+
+  3.2 Componentes compartidos:
+      ☐ Layout principal (Header, Footer, Sidebar)
+      ☐ StepWizard (componente de wizard con pasos)
+      ☐ FormField (input reutilizable con label + error)
+      ☐ SelectField (dropdown reutilizable)
+      ☐ DatePicker (selector de fecha)
+      ☐ DataTable (tabla con CRUD inline)
+      ☐ Modal (reemplaza popups)
+      ☐ Button / IconButton
+      ☐ Alert / Toast (notificaciones)
+      ☐ LoadingSpinner / Skeleton
+      ☐ ProgressBar (indicador de progreso del wizard)
+      ☐ Badge / Tag
+      ☐ Card
+      ☐ EmptyState
+
+  3.3 Páginas / Vistas:
+      ☐ LoginPage (reemplaza index.asp)
+      ☐ SolicitudWizard (reemplaza solicitud.asp)
+          ├── Step 1: DatosGeneralesForm
+          ├── Step 2: DatosFamiliaresForm
+          ├── Step 3: DatosAcademicosForm
+          ├── Step 4: IdiomasForm
+          ├── Step 5: ExperienciaProfesionalForm
+          ├── Step 6: PuestoSolicitadoForm
+          ├── Step 7: ReferenciasForm
+          └── Step 8: ResumenFinal
+      ☐ BuscarPage (reemplaza buscar.asp)
+      ☐ ImprimirPage (reemplaza imp_solicitud.asp)
+      ☐ NotFoundPage (404)
+
+  3.4 Servicios y hooks:
+      ☐ apiClient.ts (axios/fetch configurado)
+      ☐ useAuth hook
+      ☐ useCandidato hook
+      ☐ useFamiliares hook
+      ☐ useAcademicos hook
+      ☐ useIdiomas hook
+      ☐ useExperiencia hook
+      ☐ useReferencias hook
+      ☐ useCatalogos hook
+
+  3.5 Validaciones con Zod:
+      ☐ datosGeneralesSchema
+      ☐ familiarSchema
+      ☐ academicoSchema
+      ☐ idiomaSchema
+      ☐ experienciaSchema
+      ☐ referenciaSchema
+      ☐ puestoSchema
+
+  Entregables:
+    ☐ Aplicación React funcionando completa
+    ☐ Responsive (mobile-first)
+    ☐ Accesible (WCAG 2.1 AA)
+    ☐ Tests de componentes
+
+═══════════════════════════════════════════════════════════════════
+  FASE 4: INTEGRACIÓN Y MIGRACIÓN (Semana 8)
+═══════════════════════════════════════════════════════════════════
+
+  4.1 Migración de datos:
+      ☐ Script de migración de datos existentes
+      ☐ Validación de integridad post-migración
+      ☐ Backup de BD original
+
+  4.2 Integración frontend + backend:
+      ☐ Conectar todos los formularios con la API
+      ☐ Testing end-to-end (Cypress o Playwright)
+      ☐ Performance testing
+      ☐ Security testing (OWASP checklist)
+
+  4.3 Generación de PDF:
+      ☐ Implementar generación de PDF (jsPDF / Puppeteer)
+      ☐ Template de solicitud para impresión
+
+═══════════════════════════════════════════════════════════════════
+  FASE 5: PRUEBAS Y DESPLIEGUE (Semana 9-10)
+═══════════════════════════════════════════════════════════════════
+
+  5.1 QA:
+      ☐ Pruebas funcionales completas
+      ☐ Pruebas de regresión
+      ☐ Pruebas de carga
+      ☐ Pruebas en múltiples navegadores
+      ☐ Pruebas en dispositivos móviles
+      ☐ Corrección de bugs
+
+  5.2 Despliegue:
+      ☐ Configurar ambiente de staging
+      ☐ Despliegue en producción
+      ☐ Monitoreo post-deploy
+      ☐ Período de marcha en paralelo (viejo + nuevo)
+
+  5.3 Documentación:
+      ☐ Manual de usuario
+      ☐ Manual técnico
+      ☐ Guía de despliegue
+
+3. ESTRUCTURA DEL PROYECTO REACT
+================================================================================
+
+solicitud-empleo/
+├── frontend/                      # Aplicación React
+│   ├── public/
+│   │   └── favicon.ico
+│   ├── src/
+│   │   ├── assets/                # Imágenes, fuentes
+│   │   │   ├── images/
+│   │   │   └── fonts/
+│   │   ├── components/            # Componentes reutilizables
+│   │   │   ├── ui/                # Componentes UI base
+│   │   │   │   ├── Button.tsx
+│   │   │   │   ├── Card.tsx
+│   │   │   │   ├── DataTable.tsx
+│   │   │   │   ├── DatePicker.tsx
+│   │   │   │   ├── FormField.tsx
+│   │   │   │   ├── LoadingSpinner.tsx
+│   │   │   │   ├── Modal.tsx
+│   │   │   │   ├── ProgressBar.tsx
+│   │   │   │   ├── SelectField.tsx
+│   │   │   │   └── Toast.tsx
+│   │   │   ├── layout/            # Layout components
+│   │   │   │   ├── Header.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── MainLayout.tsx
+│   │   │   └── wizard/            # Wizard components
+│   │   │       ├── StepWizard.tsx
+│   │   │       └── StepIndicator.tsx
+│   │   ├── features/              # Módulos funcionales
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   ├── useAuth.ts
+│   │   │   │   └── authService.ts
+│   │   │   ├── solicitud/
+│   │   │   │   ├── SolicitudWizard.tsx
+│   │   │   │   ├── steps/
+│   │   │   │   │   ├── DatosGeneralesStep.tsx
+│   │   │   │   │   ├── DatosFamiliaresStep.tsx
+│   │   │   │   │   ├── DatosAcademicosStep.tsx
+│   │   │   │   │   ├── IdiomasStep.tsx
+│   │   │   │   │   ├── ExperienciaStep.tsx
+│   │   │   │   │   ├── PuestoStep.tsx
+│   │   │   │   │   ├── ReferenciasStep.tsx
+│   │   │   │   │   └── ResumenStep.tsx
+│   │   │   │   └── hooks/
+│   │   │   │       ├── useSolicitud.ts
+│   │   │   │       ├── useFamiliares.ts
+│   │   │   │       ├── useAcademicos.ts
+│   │   │   │       ├── useIdiomas.ts
+│   │   │   │       ├── useExperiencia.ts
+│   │   │   │       └── useReferencias.ts
+│   │   │   ├── busqueda/
+│   │   │   │   ├── BuscarPage.tsx
+│   │   │   │   └── useBusqueda.ts
+│   │   │   └── impresion/
+│   │   │       ├── ImprimirPage.tsx
+│   │   │       └── SolicitudPDF.tsx
+│   │   ├── lib/                   # Utilidades y configuración
+│   │   │   ├── api.ts             # Cliente HTTP configurado
+│   │   │   ├── constants.ts       # Constantes
+│   │   │   └── utils.ts           # Funciones utilitarias
+│   │   ├── schemas/               # Esquemas de validación Zod
+│   │   │   ├── datosGenerales.schema.ts
+│   │   │   ├── familiar.schema.ts
+│   │   │   ├── academico.schema.ts
+│   │   │   ├── idioma.schema.ts
+│   │   │   ├── experiencia.schema.ts
+│   │   │   ├── referencia.schema.ts
+│   │   │   └── puesto.schema.ts
+│   │   ├── types/                 # TypeScript types/interfaces
+│   │   │   ├── candidato.types.ts
+│   │   │   ├── familiar.types.ts
+│   │   │   ├── academico.types.ts
+│   │   │   ├── experiencia.types.ts
+│   │   │   ├── referencia.types.ts
+│   │   │   └── catalogo.types.ts
+│   │   ├── styles/                # Estilos globales
+│   │   │   ├── globals.css
+│   │   │   ├── variables.css
+│   │   │   └── reset.css
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── router.tsx
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   └── .env.local
+│
+├── backend/                       # API Node.js
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── database.ts
+│   │   │   └── env.ts
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── candidato.controller.ts
+│   │   │   ├── familiar.controller.ts
+│   │   │   ├── academico.controller.ts
+│   │   │   ├── idioma.controller.ts
+│   │   │   ├── experiencia.controller.ts
+│   │   │   ├── referencia.controller.ts
+│   │   │   ├── catalogo.controller.ts
+│   │   │   └── busqueda.controller.ts
+│   │   ├── middleware/
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── validation.middleware.ts
+│   │   │   ├── errorHandler.ts
+│   │   │   └── rateLimiter.ts
+│   │   ├── models/
+│   │   │   ├── candidato.model.ts
+│   │   │   └── ... (uno por entidad)
+│   │   ├── routes/
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── candidato.routes.ts
+│   │   │   ├── catalogo.routes.ts
+│   │   │   └── busqueda.routes.ts
+│   │   ├── services/
+│   │   │   ├── candidato.service.ts
+│   │   │   └── ... (uno por entidad)
+│   │   ├── validators/
+│   │   │   └── ... (esquemas Zod server-side)
+│   │   └── app.ts
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env
+│
+├── database/                      # Scripts de BD
+│   ├── schema/
+│   │   ├── 01_create_tables.sql
+│   │   ├── 02_create_constraints.sql
+│   │   ├── 03_create_indexes.sql
+│   │   └── 04_seed_catalogos.sql
+│   ├── stored_procedures/
+│   │   └── ...
+│   └── migration/
+│       └── migrate_from_legacy.sql
+│
+└── docs/                          # Documentación
+    ├── api.yaml                   # OpenAPI spec
+    ├── manual_usuario.md
+    └── deployment.md
+
+4. CRONOGRAMA ESTIMADO
+================================================================================
+
+  SEMANA  │ FASE                          │ HORAS EST.
+  ────────┼───────────────────────────────┼───────────
+  1       │ Diseño BD + API spec          │ 40 hrs
+  2       │ Diseño UI/UX + Mockups        │ 40 hrs
+  3       │ Backend: Auth + Candidatos    │ 40 hrs
+  4       │ Backend: Resto endpoints      │ 40 hrs
+  5       │ Frontend: Layout + Wizard     │ 40 hrs
+  6       │ Frontend: Formularios         │ 40 hrs
+  7       │ Frontend: Búsqueda + PDF      │ 40 hrs
+  8       │ Integración + Migración datos │ 40 hrs
+  9       │ Testing + Bug fixes           │ 40 hrs
+  10      │ Despliegue + Documentación    │ 40 hrs
+  ────────┼───────────────────────────────┼───────────
+  TOTAL   │                               │ 400 hrs
+          │                               │ ~10 semanas
+
+5. RIESGOS Y MITIGACIÓN
+================================================================================
+
+  RIESGO                              │ MITIGACIÓN
+  ────────────────────────────────────┼──────────────────────────────────
+  Datos corruptos en BD original      │ Script de limpieza + validación
+  Pérdida de datos en migración       │ Backup completo antes de migrar
+  Usuarios no adoptan nuevo sistema   │ Capacitación + UI intuitiva
+  Cambios de requerimientos           │ Metodología ágil con sprints
+  Compatibilidad navegadores          │ Testing cross-browser
+  Performance con datos históricos    │ Paginación + lazy loading
+
+6. CRITERIOS DE ACEPTACIÓN
+================================================================================
+
+  ☐ Todas las funcionalidades del sistema actual replicadas
+  ☐ Datos migrados al 100% sin pérdidas
+  ☐ Tiempo de carga < 2 segundos
+  ☐ Responsive en desktop, tablet y móvil
+  ☐ Sin vulnerabilidades OWASP Top 10
+  ☐ Cobertura de tests > 80%
+  ☐ Documentación completa
+  ☐ Aprobación de QA
+  ☐ Aprobación de usuarios finales

@@ -1,0 +1,657 @@
+================================================================================
+  DISEÑO DE BASE DE DATOS NORMALIZADA
+  Migración Solicitud de Empleo → SQL Server Moderno
+  Fecha: 08/06/2026
+================================================================================
+
+1. PROBLEMAS DE LA BASE DE DATOS ACTUAL
+================================================================================
+
+  1.1 Base de datos actual: Sol_Empleo
+      Server: 192.168.8.234
+      User: Reclutamiento
+
+  1.2 Problemas identificados:
+
+  ☒ tbl_DGenerales tiene 46+ columnas — viola 1FN, 2FN y 3FN
+     Mezcla: datos personales + contacto + salud + vehículo + bancarios
+     + empleo + emergencia en UNA sola tabla
+
+  ☒ Cédula como PK (string) — problemático si cambia o tiene errores
+
+  ☒ Sin foreign keys — no hay integridad referencial
+
+  ☒ Sin índices documentados
+
+  ☒ Catálogos hardcodeados en código ASP (nacionalidades, estados civiles,
+     niveles académicos, etc.) — no están en la BD
+
+  ☒ DELETE + INSERT en vez de UPDATE — pérdida potencial de timestamps,
+     campos auto-generados
+
+  ☒ Sin campos de auditoría (created_at, updated_at, created_by)
+
+  ☒ Sin soft delete — los registros se borran físicamente
+
+  ☒ Campo "interno" en tbl_referencias (Y/N) — debería ser tabla separada
+     o al menos boolean
+
+  ☒ Sin constraints de validación
+
+2. ESQUEMA DE TABLAS ACTUAL (LEGACY)
+================================================================================
+
+  tbl_DGenerales (PK: cedula)
+    → 46+ columnas mezcladas de todo tipo
+
+  tbl_dfamiliares (PK: id_df)
+    → cedula, nombre, parentesco, l_trabajo, Direccion
+
+  tbl_dacademicos (PK: id_da)
+    → cedula, nivel_academico, titulo, estado, ult_ano_aprob,
+      institucion, duracion
+
+  tbl_idiomas (catálogo)
+    → cod_idioma, descripcion
+
+  tbl_candidato_idioma (relación)
+    → cedula, idioma, n_lectura, n_escritura, n_conversacion
+
+  tbl_eprofesional (PK: id_ep)
+    → cedula, empresa, giro, cargo, jefe_inmediato,
+      f_ingreso, f_salida, motivo_salida
+
+  tbl_referencias (PK: id_ref)
+    → cedula, nombre_completo, direccion, empresa, edad,
+      telefono, tipo_relacion, interno
+
+3. NUEVO ESQUEMA NORMALIZADO (3FN)
+================================================================================
+
+═══════════════════════════════════════════════════════════════════
+  TABLAS DE CATÁLOGOS (Lookup Tables)
+═══════════════════════════════════════════════════════════════════
+
+-- ================================================================
+-- cat_nacionalidades
+-- ================================================================
+CREATE TABLE cat_nacionalidades (
+    id_nacionalidad     INT IDENTITY(1,1) PRIMARY KEY,
+    codigo              VARCHAR(5) NOT NULL UNIQUE,     -- 'NIC', 'MEX', etc.
+    nombre              NVARCHAR(50) NOT NULL,           -- 'Nicaragüense'
+    activo              BIT NOT NULL DEFAULT 1,
+    orden               INT NOT NULL DEFAULT 0
+);
+
+-- Datos semilla:
+-- (Nic, Nicaragüense), (Mex, Mexicana), (Hon, Hondureña), 
+-- (Sv, Salvadoreña), (Gua, Guatemalteca), (CR, Costarricense),
+-- (Pan, Panameña), (Col, Colombiana), (Ven, Venezolana), 
+-- (EUA, Estadounidense), (Can, Canadiense), etc.
+
+
+-- ================================================================
+-- cat_estados_civiles
+-- ================================================================
+CREATE TABLE cat_estados_civiles (
+    id_estado_civil     INT IDENTITY(1,1) PRIMARY KEY,
+    codigo              CHAR(1) NOT NULL UNIQUE,         -- 'S', 'C', 'A', 'V'
+    nombre              NVARCHAR(30) NOT NULL,           -- 'Soltero(a)'
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+-- Datos: (S, Soltero(a)), (C, Casado(a)), (A, Acompañado(a)), (V, Viudo(a))
+
+
+-- ================================================================
+-- cat_niveles_academicos
+-- ================================================================
+CREATE TABLE cat_niveles_academicos (
+    id_nivel            INT IDENTITY(1,1) PRIMARY KEY,
+    codigo              VARCHAR(3) NOT NULL UNIQUE,      -- 'P', 'S', 'T', 'U', 'Pg', 'M', 'D'
+    nombre              NVARCHAR(30) NOT NULL,           -- 'Primaria', 'Universidad'
+    orden               INT NOT NULL DEFAULT 0,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_estados_academicos
+-- ================================================================
+CREATE TABLE cat_estados_academicos (
+    id_estado_acad      INT IDENTITY(1,1) PRIMARY KEY,
+    codigo              VARCHAR(3) NOT NULL UNIQUE,      -- '10', '20', '30', '40', '50'
+    nombre              NVARCHAR(30) NOT NULL,           -- 'Incompleto', 'Completo'
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_idiomas
+-- ================================================================
+CREATE TABLE cat_idiomas (
+    id_idioma           INT IDENTITY(1,1) PRIMARY KEY,
+    codigo              VARCHAR(10) NOT NULL UNIQUE,
+    nombre              NVARCHAR(50) NOT NULL,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_tipos_sangre
+-- ================================================================
+CREATE TABLE cat_tipos_sangre (
+    id_tipo_sangre      INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              VARCHAR(5) NOT NULL UNIQUE,     -- 'A+', 'A-', 'B+', 'O+', etc.
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_parentescos
+-- ================================================================
+CREATE TABLE cat_parentescos (
+    id_parentesco       INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              NVARCHAR(30) NOT NULL UNIQUE,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+-- Datos: Padre, Madre, Hermano(a), Hijo(a), Esposo(a), Tío(a), Primo(a), etc.
+
+
+-- ================================================================
+-- cat_bancos
+-- ================================================================
+CREATE TABLE cat_bancos (
+    id_banco            INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              NVARCHAR(80) NOT NULL,
+    codigo              VARCHAR(10) NOT NULL UNIQUE,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_categorias_licencia
+-- ================================================================
+CREATE TABLE cat_categorias_licencia (
+    id_categoria        INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              NVARCHAR(30) NOT NULL,           -- 'Liviana', 'Pesada', etc.
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+-- ================================================================
+-- cat_departamentos
+-- ================================================================
+CREATE TABLE cat_departamentos (
+    id_departamento     INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              NVARCHAR(50) NOT NULL,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+-- Datos: Managua, León, Granada, Masaya, Chinandega, etc.
+
+
+-- ================================================================
+-- cat_turnos
+-- ================================================================
+CREATE TABLE cat_turnos (
+    id_turno            INT IDENTITY(1,1) PRIMARY KEY,
+    nombre              NVARCHAR(30) NOT NULL,           -- 'Matutino', 'Vespertino', 'Nocturno', 'Mixto'
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+
+═══════════════════════════════════════════════════════════════════
+  TABLAS PRINCIPALES (Entidades de Negocio)
+═══════════════════════════════════════════════════════════════════
+
+-- ================================================================
+-- candidatos (antes: tbl_DGenerales - NORMALIZADA)
+-- ================================================================
+CREATE TABLE candidatos (
+    id_candidato        INT IDENTITY(1,1) PRIMARY KEY,
+    cedula              VARCHAR(20) NOT NULL UNIQUE,
+    
+    -- Datos personales
+    primer_nombre       NVARCHAR(50) NOT NULL,
+    segundo_nombre      NVARCHAR(50) NULL,
+    primer_apellido     NVARCHAR(50) NOT NULL,
+    segundo_apellido    NVARCHAR(50) NULL,
+    lugar_nacimiento    NVARCHAR(100) NULL,
+    fecha_nacimiento    DATE NULL,
+    id_nacionalidad     INT NULL REFERENCES cat_nacionalidades(id_nacionalidad),
+    id_estado_civil     INT NULL REFERENCES cat_estados_civiles(id_estado_civil),
+    inss                VARCHAR(20) NULL,
+    ruc                 VARCHAR(20) NULL,
+    pasaporte           VARCHAR(20) NULL,
+    
+    -- Datos físicos
+    estatura            DECIMAL(4,2) NULL,              -- metros (ej: 1.75)
+    peso                DECIMAL(5,1) NULL,              -- libras
+    id_tipo_sangre      INT NULL REFERENCES cat_tipos_sangre(id_tipo_sangre),
+    
+    -- Contacto
+    celular             VARCHAR(20) NULL,
+    telefono_domicilio  VARCHAR(20) NULL,
+    email               NVARCHAR(100) NULL,             -- ¡NUEVO! campo email
+    
+    -- Domicilio
+    id_departamento     INT NULL REFERENCES cat_departamentos(id_departamento),
+    ciudad              NVARCHAR(80) NULL,
+    direccion           NVARCHAR(500) NULL,
+    tipo_vivienda       VARCHAR(20) NULL,               -- 'Propia', 'Alquilada', 'Familiar'
+    
+    -- Vehículo
+    tiene_licencia      BIT NOT NULL DEFAULT 0,
+    id_cat_licencia     INT NULL REFERENCES cat_categorias_licencia(id_categoria),
+    tiene_vehiculo      BIT NOT NULL DEFAULT 0,
+    marca_vehiculo      NVARCHAR(50) NULL,
+    anio_vehiculo       INT NULL,
+    
+    -- Bancario
+    tiene_cuenta_banco  BIT NOT NULL DEFAULT 0,
+    id_banco            INT NULL REFERENCES cat_bancos(id_banco),
+    numero_cuenta       VARCHAR(30) NULL,
+    
+    -- Salud
+    padece_enfermedad   BIT NOT NULL DEFAULT 0,
+    descripcion_enfermedad NVARCHAR(500) NULL,
+    padece_alergia      BIT NOT NULL DEFAULT 0,
+    descripcion_alergia NVARCHAR(500) NULL,
+    
+    -- Emergencia
+    contacto_emergencia NVARCHAR(100) NULL,
+    parentesco_contacto NVARCHAR(50) NULL,
+    telefono_contacto   VARCHAR(20) NULL,
+    
+    -- Otros
+    practica_deporte    BIT NOT NULL DEFAULT 0,
+    tiene_tarjeta       BIT NOT NULL DEFAULT 0,
+    
+    -- Estado de la solicitud (¡NUEVO!)
+    estado_solicitud    VARCHAR(20) NOT NULL DEFAULT 'borrador',
+                        -- 'borrador', 'completada', 'revisada', 'archivada'
+    paso_actual         INT NOT NULL DEFAULT 1,          -- último paso completado
+    
+    -- Auditoría
+    fecha_solicitud     DATETIME2 NOT NULL DEFAULT GETDATE(),
+    fecha_modificacion  DATETIME2 NULL,
+    ip_registro         VARCHAR(45) NULL,               -- IPv4 o IPv6
+    
+    CONSTRAINT CK_candidatos_estado 
+        CHECK (estado_solicitud IN ('borrador','completada','revisada','archivada'))
+);
+
+CREATE INDEX IX_candidatos_nombre 
+    ON candidatos (primer_nombre, primer_apellido);
+CREATE INDEX IX_candidatos_fecha 
+    ON candidatos (fecha_solicitud DESC);
+CREATE INDEX IX_candidatos_estado 
+    ON candidatos (estado_solicitud);
+
+
+-- ================================================================
+-- candidato_puesto_solicitado (antes: campos en tbl_DGenerales)
+-- ================================================================
+CREATE TABLE candidato_puesto (
+    id_puesto           INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    disponibilidad      NVARCHAR(50) NULL,              -- 'Inmediata', '15 días', etc.
+    puesto_solicitado   NVARCHAR(150) NULL,
+    salario_minimo      DECIMAL(12,2) NULL,
+    salario_maximo      DECIMAL(12,2) NULL,
+    id_turno            INT NULL REFERENCES cat_turnos(id_turno),
+    observaciones_horario NVARCHAR(500) NULL,
+    experiencia_area    NVARCHAR(500) NULL,
+    
+    CONSTRAINT UQ_candidato_puesto UNIQUE (id_candidato)
+);
+
+
+-- ================================================================
+-- candidato_familiares (antes: tbl_dfamiliares)
+-- ================================================================
+CREATE TABLE candidato_familiares (
+    id_familiar         INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    nombre_completo     NVARCHAR(150) NOT NULL,
+    id_parentesco       INT NULL REFERENCES cat_parentescos(id_parentesco),
+    lugar_trabajo       NVARCHAR(150) NULL,
+    direccion           NVARCHAR(300) NULL,
+    telefono            VARCHAR(20) NULL,               -- ¡NUEVO!
+    
+    -- Auditoría
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    fecha_modificacion  DATETIME2 NULL,
+    activo              BIT NOT NULL DEFAULT 1          -- soft delete
+);
+
+CREATE INDEX IX_familiares_candidato 
+    ON candidato_familiares (id_candidato);
+
+
+-- ================================================================
+-- candidato_academicos (antes: tbl_dacademicos)
+-- ================================================================
+CREATE TABLE candidato_academicos (
+    id_academico        INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    id_nivel_academico  INT NOT NULL REFERENCES cat_niveles_academicos(id_nivel),
+    titulo_obtenido     NVARCHAR(250) NOT NULL,
+    institucion         NVARCHAR(200) NOT NULL,
+    id_estado           INT NOT NULL REFERENCES cat_estados_academicos(id_estado_acad),
+    ultimo_anio_aprobado VARCHAR(10) NULL,
+    duracion            VARCHAR(30) NULL,
+    
+    -- Auditoría
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    fecha_modificacion  DATETIME2 NULL,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IX_academicos_candidato 
+    ON candidato_academicos (id_candidato);
+
+
+-- ================================================================
+-- candidato_idiomas (antes: tbl_candidato_idioma)
+-- ================================================================
+CREATE TABLE candidato_idiomas (
+    id_candidato_idioma INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    id_idioma           INT NOT NULL REFERENCES cat_idiomas(id_idioma),
+    nivel_lectura       INT NOT NULL CHECK (nivel_lectura BETWEEN 0 AND 100),
+    nivel_escritura     INT NOT NULL CHECK (nivel_escritura BETWEEN 0 AND 100),
+    nivel_conversacion  INT NOT NULL CHECK (nivel_conversacion BETWEEN 0 AND 100),
+    
+    -- Auditoría
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    
+    CONSTRAINT UQ_candidato_idioma UNIQUE (id_candidato, id_idioma)
+);
+
+CREATE INDEX IX_idiomas_candidato 
+    ON candidato_idiomas (id_candidato);
+
+
+-- ================================================================
+-- candidato_experiencia (antes: tbl_eprofesional)
+-- ================================================================
+CREATE TABLE candidato_experiencia (
+    id_experiencia      INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    empresa             NVARCHAR(150) NOT NULL,
+    giro_empresa        NVARCHAR(100) NULL,
+    cargo_desempenado   NVARCHAR(100) NOT NULL,
+    jefe_inmediato      NVARCHAR(100) NULL,
+    fecha_ingreso       DATE NULL,
+    fecha_salida        DATE NULL,
+    motivo_salida       NVARCHAR(300) NULL,
+    telefono_empresa    VARCHAR(20) NULL,               -- ¡NUEVO!
+    salario             DECIMAL(12,2) NULL,             -- ¡NUEVO!
+    
+    -- Auditoría
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    fecha_modificacion  DATETIME2 NULL,
+    activo              BIT NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IX_experiencia_candidato 
+    ON candidato_experiencia (id_candidato);
+
+
+-- ================================================================
+-- candidato_referencias (antes: tbl_referencias)
+-- ================================================================
+CREATE TABLE candidato_referencias (
+    id_referencia       INT IDENTITY(1,1) PRIMARY KEY,
+    id_candidato        INT NOT NULL REFERENCES candidatos(id_candidato) ON DELETE CASCADE,
+    tipo_referencia     VARCHAR(10) NOT NULL,            -- 'EXTERNA', 'INTERNA'
+    nombre_completo     NVARCHAR(150) NOT NULL,
+    direccion           NVARCHAR(300) NULL,
+    empresa             NVARCHAR(150) NULL,
+    edad                INT NULL,
+    telefono            VARCHAR(20) NULL,
+    relacion            NVARCHAR(50) NULL,               -- parentesco o tipo relación
+    
+    -- Auditoría
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    fecha_modificacion  DATETIME2 NULL,
+    activo              BIT NOT NULL DEFAULT 1,
+
+    CONSTRAINT CK_tipo_referencia 
+        CHECK (tipo_referencia IN ('EXTERNA', 'INTERNA'))
+);
+
+CREATE INDEX IX_referencias_candidato 
+    ON candidato_referencias (id_candidato);
+
+
+═══════════════════════════════════════════════════════════════════
+  TABLAS DE ADMINISTRACIÓN (NUEVAS)
+═══════════════════════════════════════════════════════════════════
+
+-- ================================================================
+-- usuarios_admin (¡NUEVO! - para panel administrativo)
+-- ================================================================
+CREATE TABLE usuarios_admin (
+    id_usuario          INT IDENTITY(1,1) PRIMARY KEY,
+    username            VARCHAR(50) NOT NULL UNIQUE,
+    password_hash       VARCHAR(255) NOT NULL,           -- bcrypt hash
+    nombre_completo     NVARCHAR(100) NOT NULL,
+    email               NVARCHAR(100) NULL,
+    rol                 VARCHAR(20) NOT NULL DEFAULT 'consulta',
+                        -- 'admin', 'reclutador', 'consulta'
+    activo              BIT NOT NULL DEFAULT 1,
+    ultimo_acceso       DATETIME2 NULL,
+    fecha_creacion      DATETIME2 NOT NULL DEFAULT GETDATE(),
+    
+    CONSTRAINT CK_usuario_rol 
+        CHECK (rol IN ('admin', 'reclutador', 'consulta'))
+);
+
+
+-- ================================================================
+-- audit_log (¡NUEVO! - registro de auditoría)
+-- ================================================================
+CREATE TABLE audit_log (
+    id_log              BIGINT IDENTITY(1,1) PRIMARY KEY,
+    tabla_afectada      VARCHAR(50) NOT NULL,
+    id_registro         INT NOT NULL,
+    accion              VARCHAR(10) NOT NULL,             -- 'INSERT', 'UPDATE', 'DELETE'
+    datos_anteriores    NVARCHAR(MAX) NULL,               -- JSON
+    datos_nuevos        NVARCHAR(MAX) NULL,               -- JSON
+    id_usuario          INT NULL,
+    ip_address          VARCHAR(45) NULL,
+    fecha               DATETIME2 NOT NULL DEFAULT GETDATE()
+);
+
+CREATE INDEX IX_audit_fecha ON audit_log (fecha DESC);
+CREATE INDEX IX_audit_tabla ON audit_log (tabla_afectada, id_registro);
+
+
+4. SCRIPT DE MIGRACIÓN DE DATOS
+================================================================================
+
+-- ================================================================
+-- MIGRACIÓN: tbl_DGenerales → candidatos + candidato_puesto
+-- ================================================================
+-- NOTA: Ejecutar DESPUÉS de crear catálogos y poblarlos
+
+/*
+INSERT INTO candidatos (
+    cedula, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
+    lugar_nacimiento, fecha_nacimiento, inss, ruc, pasaporte,
+    estatura, peso, celular, telefono_domicilio,
+    ciudad, direccion, tipo_vivienda,
+    tiene_licencia, tiene_vehiculo, marca_vehiculo, anio_vehiculo,
+    tiene_cuenta_banco, numero_cuenta,
+    padece_enfermedad, descripcion_enfermedad,
+    padece_alergia, descripcion_alergia,
+    contacto_emergencia, parentesco_contacto, telefono_contacto,
+    practica_deporte, tiene_tarjeta,
+    fecha_solicitud, estado_solicitud
+)
+SELECT 
+    cedula, pnombre, snombre, papellido, sapellido,
+    lugar_nac, 
+    CASE WHEN YEAR(fecha_nac) = 1900 THEN NULL ELSE fecha_nac END,
+    inss, ruc, pasaporte,
+    TRY_CAST(estatura AS DECIMAL(4,2)),
+    TRY_CAST(peso AS DECIMAL(5,1)),
+    celular, telefono_dom,
+    ciudad_dom, direccion_dom, tipo_casa,
+    CASE WHEN licencia = 'S' THEN 1 ELSE 0 END,
+    CASE WHEN vehiculo = 'S' THEN 1 ELSE 0 END,
+    marca, TRY_CAST(ano_vehic AS INT),
+    CASE WHEN cuenta_banco = 'S' THEN 1 ELSE 0 END,
+    no_cuenta,
+    CASE WHEN penfermedad = 'S' THEN 1 ELSE 0 END, enfermedad,
+    CASE WHEN palergia = 'S' THEN 1 ELSE 0 END, alergia,
+    contacto_emer, parentesco_cont, tel_contacto,
+    CASE WHEN p_deporte = 'S' THEN 1 ELSE 0 END,
+    CASE WHEN t_tarjeta = 'S' THEN 1 ELSE 0 END,
+    ISNULL(fecha_sol, GETDATE()),
+    'completada'
+FROM tbl_DGenerales
+WHERE cedula IS NOT NULL AND cedula <> '';
+
+-- Migrar puesto solicitado
+INSERT INTO candidato_puesto (id_candidato, puesto_solicitado, 
+    salario_minimo, salario_maximo, observaciones_horario, experiencia_area)
+SELECT 
+    c.id_candidato,
+    dg.puesto,
+    TRY_CAST(dg.salario_min AS DECIMAL(12,2)),
+    TRY_CAST(dg.salario_max AS DECIMAL(12,2)),
+    dg.obs_horario,
+    dg.experiencia
+FROM tbl_DGenerales dg
+INNER JOIN candidatos c ON c.cedula = dg.cedula;
+
+-- Migrar familiares
+INSERT INTO candidato_familiares (id_candidato, nombre_completo, 
+    lugar_trabajo, direccion)
+SELECT 
+    c.id_candidato,
+    df.nombre,
+    df.l_trabajo,
+    df.Direccion
+FROM tbl_dfamiliares df
+INNER JOIN candidatos c ON c.cedula = df.cedula;
+
+-- Migrar académicos
+INSERT INTO candidato_academicos (id_candidato, titulo_obtenido,
+    institucion, ultimo_anio_aprobado, duracion)
+SELECT 
+    c.id_candidato,
+    da.titulo,
+    da.institucion,
+    da.ult_ano_aprob,
+    da.duracion
+FROM tbl_dacademicos da
+INNER JOIN candidatos c ON c.cedula = da.cedula;
+
+-- Migrar experiencia
+INSERT INTO candidato_experiencia (id_candidato, empresa, giro_empresa,
+    cargo_desempenado, jefe_inmediato, fecha_ingreso, fecha_salida, motivo_salida)
+SELECT 
+    c.id_candidato,
+    ep.empresa,
+    ep.giro,
+    ep.cargo,
+    ep.jefe_inmediato,
+    TRY_CAST(ep.f_ingreso AS DATE),
+    TRY_CAST(ep.f_salida AS DATE),
+    ep.motivo_salida
+FROM tbl_eprofesional ep
+INNER JOIN candidatos c ON c.cedula = ep.cedula;
+
+-- Migrar referencias
+INSERT INTO candidato_referencias (id_candidato, tipo_referencia,
+    nombre_completo, direccion, empresa, edad, telefono, relacion)
+SELECT 
+    c.id_candidato,
+    CASE WHEN r.interno = 'Y' THEN 'INTERNA' ELSE 'EXTERNA' END,
+    r.nombre_completo,
+    r.direccion,
+    r.empresa,
+    TRY_CAST(r.edad AS INT),
+    r.telefono,
+    r.tipo_relacion
+FROM tbl_referencias r
+INNER JOIN candidatos c ON c.cedula = r.cedula;
+*/
+
+5. DIAGRAMA ENTIDAD-RELACIÓN
+================================================================================
+
+  ┌───────────────┐     ┌──────────────────────┐
+  │cat_nacionalid.│     │  cat_estados_civiles  │
+  └───────┬───────┘     └──────────┬───────────┘
+          │                        │
+          │   1                    │   1
+          ├────────────────────────┤
+          │                        │
+  ┌───────┴────────────────────────┴───────────┐
+  │              CANDIDATOS                     │
+  │  id_candidato (PK)                          │
+  │  cedula (UNIQUE)                            │
+  │  nombres, apellidos, datos personales...    │
+  │  estado_solicitud, paso_actual              │
+  └──┬──────────┬──────────┬──────────┬────────┘
+     │          │          │          │
+     │ 1:N      │ 1:N      │ 1:N      │ 1:N
+     │          │          │          │
+  ┌──┴───┐  ┌──┴────┐  ┌──┴─────┐  ┌┴───────────┐
+  │Famil.│  │Académ.│  │Experien│  │Referencias │
+  └──────┘  └──┬────┘  └────────┘  └────────────┘
+               │
+            ┌──┴──────────┐
+            │cat_niveles  │
+            │cat_estados  │
+            └─────────────┘
+     │ 1:1       │ N:M
+     │           │
+  ┌──┴────┐  ┌──┴──────┐
+  │Puesto │  │Idiomas  │──→ cat_idiomas
+  └───────┘  └─────────┘
+
+6. CAMPOS NUEVOS AGREGADOS (no existían en el sistema original)
+================================================================================
+
+  TABLA                     │ CAMPO NUEVO              │ JUSTIFICACIÓN
+  ──────────────────────────┼──────────────────────────┼─────────────────────
+  candidatos                │ id_candidato (INT PK)    │ Reemplaza cédula como PK
+  candidatos                │ email                    │ Comunicación moderna
+  candidatos                │ estado_solicitud         │ Tracking del proceso
+  candidatos                │ paso_actual              │ Continuar donde dejó
+  candidatos                │ ip_registro              │ Seguridad/auditoría
+  candidatos                │ fecha_modificacion       │ Auditoría
+  candidato_experiencia     │ telefono_empresa         │ Verificación de refs
+  candidato_experiencia     │ salario                  │ Dato útil para RRHH
+  candidato_familiares      │ telefono                 │ Contacto adicional
+  Todas las tablas          │ fecha_creacion           │ Auditoría
+  Todas las tablas          │ fecha_modificacion       │ Auditoría
+  Todas las tablas          │ activo (soft delete)     │ No perder datos
+  usuarios_admin            │ (tabla completa)         │ Autenticación admin
+  audit_log                 │ (tabla completa)         │ Trazabilidad
+
+7. RESUMEN DE MEJORAS EN BASE DE DATOS
+================================================================================
+
+  ANTES                              │ DESPUÉS
+  ───────────────────────────────────┼────────────────────────────────
+  6 tablas, sin catálogos            │ 20+ tablas normalizadas
+  Cédula como PK (varchar)          │ INT IDENTITY como PK
+  Sin FK ni constraints              │ FK + CHECK constraints
+  Sin índices                        │ Índices en columnas clave
+  DELETE + INSERT                    │ UPDATE con timestamps
+  Sin auditoría                      │ audit_log + created/modified
+  Catálogos en código ASP            │ Tablas de catálogo en BD
+  Sin soft delete                    │ Campo 'activo' (BIT)
+  Sin estado de solicitud            │ Estado + paso actual
+  Sin roles de usuario               │ Tabla usuarios con roles
+  1 tabla con 46 columnas            │ Tabla principal + 6 tablas hijas
+  Datos no validados                 │ CHECK constraints

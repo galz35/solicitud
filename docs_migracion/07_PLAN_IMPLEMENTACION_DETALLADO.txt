@@ -1,0 +1,176 @@
+================================================================================
+  PLAN DE IMPLEMENTACIÓN DETALLADO Y PROFUNDO
+  Migración Solicitud de Empleo → React + Node.js + SQL Server
+  Fecha: 08/06/2026
+================================================================================
+
+1. DISEÑO ARQUITECTÓNICO Y ESTRUCTURA DE DATOS
+================================================================================
+La arquitectura propuesta separa la aplicación en tres capas lógicas para 
+garantizar la mantenibilidad, seguridad y rendimiento del sistema.
+
+1.1 CAPA DE PRESENTACIÓN (Frontend React SPA)
+  - Tecnología: React 18+ con TypeScript, empaquetado por Vite.
+  - Gestión de Formularios: React Hook Form para un manejo óptimo de los renders.
+  - Validación del Cliente: Esquemas Zod para validación tipada y en tiempo real.
+  - Comunicación: Axios + TanStack Query (React Query) para llamadas y caché de API.
+  - Sistema de Diseño: CSS Vanilla con CSS Modules y Variables CSS para un look
+    y feel premium, responsivo y con soporte de modo oscuro.
+
+1.2 CAPA DE LÓGICA DE NEGOCIO (Backend API REST)
+  - Tecnología: Node.js con Express y TypeScript.
+  - Seguridad: Autenticación por Tokens JWT y control de acceso por roles.
+  - Sanitización de Entradas: Middleware de validación que intercepta cuerpos de 
+    request y los valida contra esquemas Zod en el servidor.
+  - Logger: Morgan para auditoría de llamadas HTTP.
+  - Manejo de Errores: Middleware globalizador de excepciones HTTP.
+
+1.3 CAPA DE PERSISTENCIA (Base de Datos SQL Server)
+  - Esquema Normalizado: Separación de la tabla monolítica tbl_DGenerales en 
+    4 tablas 1:1 especializadas y 5 tablas 1:N asociadas.
+  - Encapsulamiento SQL: Operaciones complejas aisladas en Stored Procedures.
+  - Integridad Referencial: Llaves foráneas con borrado en cascada (ON DELETE CASCADE)
+    para evitar inconsistencias o datos huérfanos.
+
+1.4 MODELO DE DATOS NORMALIZADO
+  - tbl_candidatos: Datos de identidad, teléfonos y residencia.
+  - tbl_candidatos_salud_deportes: Enfermedades, alergias y deportes (1:1).
+  - tbl_candidatos_puesto: Puesto solicitado, salarios y resumen laboral (1:1).
+  - tbl_candidatos_emergencia: Nombre, parentesco y celular de emergencia (1:1).
+  - tbl_datos_familiares: Relación 1:N de familiares del candidato.
+  - tbl_datos_academicos: Relación 1:N de títulos e instituciones.
+  - tbl_experiencia_profesional: Relación 1:N de historial laboral.
+  - tbl_referencias: Relación 1:N de referencias personales/laborales.
+  - tbl_idiomas: Catálogo maestro de idiomas.
+  - tbl_candidato_idiomas: Relación N:M de idiomas dominados con niveles.
+
+================================================================================
+2. PLAN DE EJECUCIÓN PASO A PASO (FASES TÉCNICAS)
+================================================================================
+
+FASE 1: CAPA DE PERSISTENCIA (Base de Datos)
+────────────────────────────────────────────────────────────────────────────────
+El objetivo es configurar el motor de base de datos e implementar los objetos 
+que encapsularán la lógica de almacenamiento.
+
+  [x] Tarea 1.1: Creación del Esquema Físico
+      - Ejecutar schema/01_create_tables.sql para la creación de tablas.
+      - Ejecutar schema/02_create_constraints.sql para llaves primarias, foráneas,
+        restricciones de CHECK de banderas ('S'/'N') e índices de búsqueda.
+      - Ejecutar schema/03_seed_catalogos.sql para poblar el catálogo de idiomas.
+
+  [x] Tarea 1.2: Desarrollo de Procedimientos Almacenados
+      - Implementar stored_procedures/01_sp_candidato.sql:
+        * sp_GuardarCandidato (inserción/actualización transaccional 1:1).
+        * sp_ObtenerCandidatoCompleto (recuperación multi-recordset en una llamada).
+        * sp_BuscarCandidatos (búsqueda paginada con OFFSET).
+      - Implementar stored_procedures/02_sp_detalles.sql:
+        * CRUD específico para Familiares, Académicos, Experiencias, Referencias.
+
+  [x] Tarea 1.3: Script de Migración de Producción
+      - Crear migration/migrate_from_legacy.sql para migrar datos de las tablas
+        legacy al nuevo esquema normalizado limpiando strings y forzando tipos.
+
+
+FASE 2: CAPA DE LÓGICA DE NEGOCIO (Backend API)
+────────────────────────────────────────────────────────────────────────────────
+El objetivo es construir un servidor REST robusto y seguro en Node.js, Express
+y TypeScript.
+
+  [x] Tarea 2.1: Inicialización y Estructura del Servidor
+      - Configurar package.json, tsconfig.json y variables .env.
+      - Configurar pool de conexión SQL Server con soporte de base de datos en 
+        memoria simulada (memory fallback) en database.ts para poder ejecutar el 
+        proyecto localmente de forma independiente sin conexión de red.
+
+  [x] Tarea 2.2: Implementación de Middlewares e Infraestructura
+      - Crear errorHandler.ts para estandarizar las respuestas JSON de error.
+      - Crear validation.middleware.ts para interceptación de esquemas Zod.
+      - Crear auth.middleware.ts para protección JWT y control de roles.
+
+  [x] Tarea 2.3: Desarrollo de Esquemas de Validación
+      - Definir esquemas de datos del lado del servidor (candidato.validator.ts 
+        y detalles.validator.ts) para verificar formatos de cédula, campos 
+        obligatorios y tipos numéricos.
+
+  [x] Tarea 2.4: Controladores y Rutas de la API
+      - Implementar controladores (auth, catalogo, candidato, busqueda) y 
+        enlazarlos en api.routes.ts.
+      - Configurar app.ts para levantar Express en puerto 3001 con helmet, 
+        cors y morgan.
+
+  [x] Tarea 2.5: Pruebas del Backend
+      - Desarrollar pruebas de endpoints con Jest y Supertest en api.test.ts.
+
+
+FASE 3: CAPA DE PRESENTACIÓN (Frontend React)
+────────────────────────────────────────────────────────────────────────────────
+El objetivo es construir una interfaz SPA fluida, adaptativa (mobile-first), 
+con validaciones en tiempo real y micro-animaciones.
+
+  [ ] Tarea 3.1: Inicialización y Configuración del Frontend
+      - Configurar package.json, tsconfig.json, tsconfig.node.json, vite.config.ts, 
+        .env.local e index.html.
+
+  [ ] Tarea 3.2: Estilos y Sistema de Diseño Premium
+      - Crear variables.css con tokens visuales (HSL, fuentes Outfit e Inter, 
+        sombras premium, radios de borde) y modo oscuro.
+      - Crear globals.css con el reset de estilos y clases de utilidad premium.
+
+  [ ] Tarea 3.3: Componentes UI Reutilizables y Wizard
+      - Crear componentes comunes (FormField.tsx, Modal.tsx, Toast.tsx) para 
+        unificar el comportamiento del UI.
+      - Implementar StepWizard.tsx para guiar la secuencia de los 8 pasos.
+
+  [ ] Tarea 3.4: Lógica de Negocio y Estado en Frontend
+      - Definir esquemas de validación del lado del cliente en solicitud.schema.ts.
+      - Crear cliente de servicios api.service.ts para comunicación REST.
+
+  [ ] Tarea 3.5: Implementación de Pasos del Wizard
+      - Desarrollar los 8 sub-formularios del Wizard:
+        * Paso 1: Datos Generales y Salud.
+        * Paso 2: Datos Familiares (CRUD con modal).
+        * Paso 3: Datos Académicos (CRUD con modal).
+        * Paso 4: Idiomas (Selector de niveles porcentuales).
+        * Paso 5: Experiencia Profesional (CRUD historial laboral).
+        * Paso 6: Puesto Solicitado (Aspiración salarial y resumen profesional).
+        * Paso 7: Referencias (CRUD de referencias con interno S/N).
+        * Paso 8: Resumen y Envío (Vista consolidada de lectura previa).
+
+  [ ] Tarea 3.6: Desarrollo de Vistas de Gestión y Reportes
+      - Desarrollar LoginPage para login de cédula.
+      - Desarrollar BuscarPage para administración (búsqueda, paginación, filtros).
+      - Desarrollar ImprimirPage con CSS de impresión (@media print) para PDF limpio.
+
+================================================================================
+3. MATRIZ DE MAPEO Y EQUIVALENCIAS TÉCNICAS
+================================================================================
+
+  Recurso / Lógica Legacy (ASP) ──> Capa Frontend React ──> Capa Backend API ──> Base de Datos SQL
+  ──────────────────────────────────────────────────────────────────────────────
+  index.asp                     ──> LoginPage.tsx       ──> POST /auth/login ──> SELECT candidato
+  solicitud.asp (generales)     ──> DatosGeneralesStep  ──> POST /candidatos ──> sp_GuardarCandidato
+  dacad.asp / saveda.asp        ──> DatosAcademicosStep ──> POST /academicos ──> sp_GuardarAcademico
+  dfamiliar.asp / savedf.asp    ──> DatosFamiliaresStep ──> POST /familiares ──> sp_GuardarFamiliar
+  eprofesional.asp / saveep.asp ──> ExperienciaStep     ──> POST /experiencia──> sp_GuardarExperiencia
+  referencias.asp / saveref.asp ──> ReferenciasStep     ──> POST /referencias──> sp_GuardarReferencia
+  buscar.asp                    ──> BuscarPage.tsx      ──> GET /buscar      ──> sp_BuscarCandidatos
+  imp_solicitud.asp             ──> ImprimirPage.tsx    ──> GET /candidatos  ──> sp_ObtenerCandidatoCompleto
+
+================================================================================
+4. PLAN DE VERIFICACIÓN
+================================================================================
+
+4.1 INTEGRIDAD DE DATOS (MIGRACIÓN SQL)
+  - Probar el script de migración SQL inyectando un juego de datos legacy de prueba.
+  - Verificar que las 10 tablas normalizadas contengan los datos limpios.
+
+4.2 API REST (PRUEBAS DEL BACKEND)
+  - Ejecutar pruebas automatizadas Jest.
+  - Verificar respuesta de error 400 al inyectar datos incompletos o inválidos.
+
+4.3 FLUJO DE USUARIO (PRUEBAS DEL FRONTEND)
+  - Simular el registro de un candidato desde cero completando los 8 pasos.
+  - Probar las validaciones interactivas (mensajes de error en rojo).
+  - Verificar que la URL /buscar esté restringida solo a usuarios 'admin'.
+  - Comprobar la responsividad móvil y la calidad visual de la hoja de PDF impresa.

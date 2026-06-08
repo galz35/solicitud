@@ -1,0 +1,212 @@
+================================================================================
+  ANÁLISIS DEL SISTEMA ACTUAL - SOLICITUD DE EMPLEO
+  Tecnología: ASP Clásico (VBScript) + SQL Server + HTML/CSS/JS
+  Fecha de Análisis: 08/06/2026
+================================================================================
+
+1. RESUMEN EJECUTIVO
+================================================================================
+
+El sistema "Solicitud de Empleo" es una aplicación web legacy desarrollada en 
+ASP Clásico (Active Server Pages con VBScript) que permite a candidatos llenar
+una solicitud de empleo en línea. Se conecta a una base de datos SQL Server 
+(192.168.8.234, base: Sol_Empleo, usuario: Reclutamiento).
+
+El sistema tiene aproximadamente 15+ años de antigüedad basado en su stack 
+tecnológico (XHTML 1.0, ASP clásico, encoding ISO-8859-1).
+
+2. INVENTARIO DE ARCHIVOS
+================================================================================
+
+  ARCHIVO                 | LÍNEAS | PROPÓSITO
+  ----------------------- | ------ | -----------------------------------------
+  index.asp               |   102  | Login/Inicio: ingreso de cédula y acción
+  solicitud.asp           | 2,057  | Formulario principal (MONOLÍTICO)
+  imp_solicitud.asp       | 1,039  | Vista de impresión de solicitud
+  buscar.asp              |   154  | Búsqueda de candidatos por nombre
+  dacad.asp               |   ---  | Edición de datos académicos (popup)
+  dfamiliar.asp           |   ---  | Edición de datos familiares (popup)
+  eprofesional.asp        |   ---  | Edición experiencia profesional (popup)
+  referencias.asp         |   ---  | Edición de referencias (popup)
+  chcedula.asp            |   ---  | Corrección de cédula (popup)
+  instrucciones.asp       |   ---  | Ventana de instrucciones
+  saveda.asp              |   ---  | Guardar datos académicos (backend)
+  savedf.asp              |   ---  | Guardar datos familiares (backend)
+  saveep.asp              |   ---  | Guardar experiencia profesional (backend)
+  saveref.asp             |   ---  | Guardar referencias (backend)
+  css/estilo.css          |   ---  | Estilos globales
+  js/funciones.js         |   ---  | Funciones JavaScript (validaciones)
+  web.config              |   ---  | Configuración IIS
+  img/                    |   ---  | Imágenes (encabezados, logos)
+
+3. ARQUITECTURA ACTUAL
+================================================================================
+
+3.1 Patrón de Arquitectura: NINGUNO (código espagueti)
+  - Sin separación de capas (presentación + lógica + datos en mismo archivo)
+  - SQL embebido directamente en las páginas ASP
+  - Sin uso de stored procedures
+  - Sin middleware ni API
+
+3.2 Flujo de la Aplicación:
+  
+  [index.asp] → Ingresa cédula + selecciona acción
+       ↓
+  ├─ Registrar (A) → [solicitud.asp] → Formulario wizard multi-sección
+  ├─ Imprimir  (I) → [imp_solicitud.asp] → Vista solo lectura
+  └─ Consultar (C) → [buscar.asp] → Búsqueda por nombre
+       ↓
+  [solicitud.asp] tiene 8+ secciones como "divs" navegables:
+       ├─ Instrucciones
+       ├─ Datos Generales (personales, contacto, salud, etc.)
+       ├─ Datos Familiares (tabla dinámica + popup edición)
+       ├─ Datos Académicos (tabla dinámica + popup edición)
+       ├─ Idiomas (tabla dinámica)
+       ├─ Experiencia Profesional (tabla dinámica + popup edición)
+       ├─ Deportes / Tarjeta de crédito
+       ├─ Puesto Solicitado (aspiración salarial, horario)
+       └─ Referencias (externas + internas)
+
+3.3 Autenticación:
+  - Basada en Session("cedula") — la cédula del candidato
+  - Sin login con usuario/contraseña
+  - Sin roles ni permisos
+  - Timeout de 600,000ms (10 minutos)
+
+3.4 Conexión a Base de Datos:
+  - Driver ODBC: {SQL Server}
+  - Server: 192.168.8.234
+  - Database: Sol_Empleo
+  - User: Reclutamiento / pwd: sel3Rh2011
+  - Conexiones se abren y cierran en cada request (no hay pooling explícito)
+  - CREDENCIALES HARDCODEADAS EN CÓDIGO (vulnerabilidad crítica)
+
+4. MÓDULOS FUNCIONALES IDENTIFICADOS
+================================================================================
+
+4.1 DATOS GENERALES (tbl_DGenerales)
+  Campos: pnombre, snombre, papellido, sapellido, lugar_nac, fecha_nac,
+  nacionalidad, cedula, inss, ruc, estatura, peso, licencia, cat_licencia,
+  vehiculo, marca, ano_vehic, celular, telefono_dom, departamento_dom,
+  ciudad_dom, direccion_dom, tipo_casa, cuenta_banco, banco, no_cuenta,
+  ingreso, puesto, salario_max, salario_min, turno, obs_horario,
+  experiencia, penfermedad, enfermedad, palergia, alergia, tsangre,
+  contacto_emer, parentesco_cont, tel_contacto, p_deporte, t_tarjeta,
+  pasaporte, e_civil, fecha_sol
+
+  → 46+ campos en UNA SOLA tabla (no normalizada)
+
+4.2 DATOS FAMILIARES (tbl_dfamiliares)
+  Campos: cedula, nombre, parentesco, l_trabajo (lugar trabajo), 
+  Direccion, id_df (PK auto)
+  → Relación 1:N con DGenerales por cédula
+
+4.3 DATOS ACADÉMICOS (tbl_dacademicos)
+  Campos: cedula, nivel_academico, titulo, estado, ult_ano_aprob,
+  institucion, duracion, id_da (PK auto)
+  → Relación 1:N con DGenerales por cédula
+
+4.4 IDIOMAS (tbl_idiomas + tbl_candidato_idioma)
+  Catálogo: tbl_idiomas (cod_idioma, descripcion)
+  Detalle: tbl_candidato_idioma (cedula, idioma, n_lectura, n_escritura,
+  n_conversacion)
+  → Relación N:M
+
+4.5 EXPERIENCIA PROFESIONAL (tbl_eprofesional)
+  Campos: cedula, empresa, giro, cargo, jefe_inmediato, f_ingreso,
+  f_salida, motivo_salida, id_ep (PK auto)
+  → Relación 1:N con DGenerales por cédula
+
+4.6 REFERENCIAS (tbl_referencias)
+  Campos: cedula, nombre_completo, direccion, empresa, edad, telefono,
+  tipo_relacion, interno (Y/N), id_ref (PK auto)
+  → Relación 1:N con DGenerales por cédula
+  → Flag "interno" distingue referencias externas vs internas
+
+4.7 CATÁLOGOS IDENTIFICADOS:
+  - tbl_idiomas (catálogo de idiomas)
+  - Nacionalidades (hardcodeadas en código como opciones de SELECT)
+  - Niveles académicos (hardcodeados: P, S, T, U, Pg, M, D)
+  - Estados académicos (hardcodeados: 10-50)
+  - Estados civiles (hardcodeados: S, A, C, V)
+  - Tipos de sangre (hardcodeados)
+  - Categorías licencia (hardcodeadas)
+  - Bancos (parcialmente hardcodeados)
+
+5. VULNERABILIDADES Y PROBLEMAS CRÍTICOS
+================================================================================
+
+5.1 SEGURIDAD (CRÍTICO):
+  ☒ SQL Injection en TODAS las consultas (concatenación directa de strings)
+     Ejemplo: "WHERE cedula = '" & Session("cedula") & "'"
+  ☒ Credenciales de BD hardcodeadas en texto plano en múltiples archivos
+  ☒ Sin sanitización de inputs del usuario
+  ☒ Sin CSRF protection
+  ☒ Sin HTTPS enforcement
+  ☒ XSS potencial (response.Write directo de datos de BD)
+  ☒ Session fixation posible
+  ☒ Sin rate limiting ni captcha
+
+5.2 ARQUITECTURA:
+  ☒ solicitud.asp tiene 2,057 líneas (archivo monolítico imposible de mantener)
+  ☒ Código duplicado masivamente (el INSERT de tbl_dgenerales se repite 6+ veces)
+  ☒ Sin separation of concerns
+  ☒ Sin manejo de errores (no hay On Error Resume Next ni try/catch)
+  ☒ Sin logging ni auditoría
+  ☒ Sin versionamiento aparente
+
+5.3 BASE DE DATOS:
+  ☒ Tabla tbl_DGenerales con 46+ columnas (no normalizada)
+  ☒ Sin foreign keys aparentes
+  ☒ Cédula como identificador principal (string, no ID numérico)
+  ☒ DELETE + INSERT en lugar de UPDATE (pérdida de datos potencial)
+  ☒ Sin transacciones (operaciones múltiples sin rollback)
+  ☒ Sin índices documentados
+  ☒ Mezcla de CASE expressions en SQL y lógica de presentación
+
+5.4 UX/UI:
+  ☒ Diseño visual anticuado (tablas HTML para layout, fondo rojo #D62818)
+  ☒ No responsive (anchos fijos en pixeles)
+  ☒ Navegación confusa (botones << y >> sin contexto)
+  ☒ Sin indicador de progreso en el wizard
+  ☒ Alerts JavaScript nativos para validación
+  ☒ Sin feedback visual al guardar
+  ☒ Popups con window.open para edición
+  ☒ Encoding ISO-8859-1 (problemas con caracteres especiales)
+
+5.5 RENDIMIENTO:
+  ☒ Múltiples conexiones a BD por request (se abre/cierra para cada sección)
+  ☒ SELECT * en todas las consultas
+  ☒ Sin caché de catálogos
+  ☒ Archivos CSS/JS sin minificar ni compresión
+
+6. REGLAS DE NEGOCIO IDENTIFICADAS
+================================================================================
+
+  RN01: La cédula es el identificador único del candidato (14 caracteres max)
+  RN02: Formato cédula: 13 números + 1 letra (regex validada en JS)
+  RN03: Formato fecha: dd/mm/yyyy (validación JS)
+  RN04: Todos los campos de Datos Generales son obligatorios
+  RN05: Datos académicos requieren: título, nivel, estado, institución
+  RN06: Datos familiares requieren: nombre, parentesco, lugar trabajo
+  RN07: Experiencia profesional: empresa, cargo, fechas ingreso/salida
+  RN08: Referencias externas: nombre, dirección, empresa, edad, teléfono
+  RN09: Referencias internas: nombre, edad, teléfono
+  RN10: Aspiración salarial mínima debe ser > 0
+  RN11: El candidato puede registrar, consultar o imprimir su solicitud
+  RN12: Solo admin puede buscar/consultar registros (buscar.asp)
+  RN13: Idiomas tienen niveles porcentuales (lectura, escritura, conversación)
+  RN14: Session timeout: 10 minutos de inactividad
+
+7. CONCLUSIÓN
+================================================================================
+
+Este sistema requiere una migración completa. NO es candidato para refactoring
+incremental debido a:
+  1. Stack tecnológico obsoleto (ASP clásico deprecado por Microsoft)
+  2. Vulnerabilidades de seguridad irremediables en la arquitectura actual
+  3. Código monolítico no mantenible
+  4. Experiencia de usuario completamente obsoleta
+  5. No compatible con dispositivos móviles
+
+RECOMENDACIÓN: Reescritura total en React + API REST + SQL Server modernizado.
