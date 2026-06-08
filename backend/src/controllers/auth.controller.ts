@@ -253,6 +253,64 @@ export async function registro(req: Request, res: Response, next: NextFunction) 
 }
 
 // ==========================================
+// LOGIN POR EMAIL + CÉDULA (candidatos)
+// ==========================================
+export async function loginEmailCedula(req: Request, res: Response, next: NextFunction) {
+  const { email, cedula } = req.body;
+
+  try {
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+    const cleanCedula = cedula.trim().toUpperCase();
+    const cleanEmail = email.toLowerCase().trim();
+
+    const userResult = await pool
+      .request()
+      .input('email', sql.VarChar(150), cleanEmail)
+      .input('cedula', sql.VarChar(20), cleanCedula)
+      .query(`
+        SELECT u.id_usuario, u.email, u.candidato_id, u.activo,
+               c.cedula, c.pnombre, c.papellido
+        FROM tbl_usuarios_candidatos u
+        INNER JOIN tbl_candidatos c ON c.candidato_id = u.candidato_id
+        WHERE u.email = @email AND c.cedula = @cedula AND u.activo = 1
+      `);
+
+    if (userResult.recordset.length === 0) {
+      res.status(401).json({ status: 'fail', message: 'Email o cédula incorrectos' });
+      return;
+    }
+
+    const user = userResult.recordset[0];
+
+    const token = jwt.sign({
+      cedula: user.cedula,
+      candidato_id: user.candidato_id,
+      email: user.email,
+      method: 'email_cedula',
+    }, JWT_SECRET, { expiresIn: '2h' });
+
+    res.status(200).json({
+      status: 'success',
+      token,
+      candidato: {
+        cedula: user.cedula,
+        candidato_id: user.candidato_id,
+        nombre: `${user.pnombre} ${user.papellido}`,
+        email: user.email,
+        existe: true,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
 // GENERAR TOKEN DE INVITACIÓN (admin)
 // ==========================================
 export async function generarInvitacion(req: Request, res: Response, next: NextFunction) {

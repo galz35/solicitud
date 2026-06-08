@@ -12,9 +12,8 @@ export const LoginPage: React.FC = () => {
   // Cedula login
   const [cedula, setCedula] = useState('');
 
-  // Email login
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [cedulaLogin, setCedulaLogin] = useState('');
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,20 +54,20 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleLoginEmail = async (e: React.FormEvent) => {
+  const handleLoginEmailCedula = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email || !password) {
-      setError('Completa todos los campos');
+    if (!email || !cedulaLogin) {
+      setError('Ingresa tu correo y cédula');
       return;
     }
     setIsLoading(true);
     try {
-      const res = await apiService.loginEmail(email, password);
+      const res = await apiService.loginEmailCedula(email, formatCedula(cedulaLogin));
       showToast('Sesión iniciada correctamente.', 'success');
       setTimeout(() => navigate('/dashboard'), 800);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Credenciales incorrectas');
+      setError(err.response?.data?.message || 'Email o cédula incorrectos');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +94,7 @@ export const LoginPage: React.FC = () => {
             onClick={() => setModo('email')}
             style={{ ...tabBtnStyle, ...(modo === 'email' ? tabActiveStyle : {}) }}
           >
-            <Mail size={14} style={{ marginRight: 4 }} /> Email
+            <Mail size={14} style={{ marginRight: 4 }} /> Email + Cédula
           </button>
         </div>
 
@@ -118,7 +117,7 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleLoginEmail}>
+          <form onSubmit={handleLoginEmailCedula}>
             <FormField
               label="Correo electrónico"
               id="email"
@@ -129,13 +128,12 @@ export const LoginPage: React.FC = () => {
               placeholder="tu@correo.com"
             />
             <FormField
-              label="Contraseña"
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e: any) => setPassword(e.target.value)}
+              label="Cédula"
+              id="cedulaLogin"
+              value={cedulaLogin}
+              onChange={(e: any) => setCedulaLogin(formatCedula(e.target.value))}
               required
-              placeholder="••••••••"
+              placeholder="0012508900012A"
             />
             {error && <p style={{ color: '#ef4444', fontSize: 14 }}>{error}</p>}
             <button type="submit" style={btnStyle} disabled={isLoading}>

@@ -64,6 +64,15 @@ export const apiService = {
     return response.data;
   },
 
+  async loginEmailCedula(email: string, cedula: string) {
+    const response = await api.post('/auth/login-email-cedula', { email, cedula });
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('candidato', JSON.stringify(response.data.candidato));
+    }
+    return response.data;
+  },
+
   async registro(token: string, email: string, password: string) {
     const response = await api.post('/auth/registro', { token, email, password });
     return response.data;
