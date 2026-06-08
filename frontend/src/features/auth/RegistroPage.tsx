@@ -161,29 +161,30 @@ const containerStyle: React.CSSProperties = {
   justifyContent: 'center',
   alignItems: 'center',
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  padding: 20,
+  padding: '1.25rem',
 };
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
-  borderRadius: 16,
-  padding: 32,
+  background: 'var(--bg-secondary)',
+  borderRadius: 'var(--radius-lg)',
+  padding: '2rem',
   width: '100%',
   maxWidth: 420,
-  boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+  boxShadow: 'var(--shadow-premium)',
+  border: '1px solid var(--border-color)',
 };
 
 const btnStyle: React.CSSProperties = {
   width: '100%',
-  padding: '12px 24px',
-  background: '#6366f1',
-  color: 'white',
+  padding: '0.75rem 1.5rem',
+  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+  color: 'var(--text-light)',
   border: 'none',
-  borderRadius: 8,
-  fontSize: 16,
+  borderRadius: 'var(--radius-md)',
+  fontSize: '1rem',
   fontWeight: 600,
   cursor: 'pointer',
-  marginTop: 16,
+  marginTop: '1rem',
 };
 
 const centerStyle: React.CSSProperties = {

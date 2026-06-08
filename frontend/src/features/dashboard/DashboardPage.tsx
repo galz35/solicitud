@@ -98,58 +98,60 @@ export const DashboardPage: React.FC = () => {
 
 const containerStyle: React.CSSProperties = {
   minHeight: '100vh',
-  background: '#f8fafc',
+  background: 'var(--bg-primary)',
 };
 
 const headerStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '16px 24px',
-  background: 'white',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  padding: '1rem 1.5rem',
+  background: 'var(--bg-secondary)',
+  boxShadow: 'var(--shadow-sm)',
+  borderBottom: '1px solid var(--border-color)',
 };
 
 const logoutBtnStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 6,
-  padding: '8px 16px',
-  background: '#fee2e2',
-  color: '#ef4444',
+  padding: '0.5rem 1rem',
+  background: 'var(--color-error-light)',
+  color: 'var(--color-error)',
   border: 'none',
-  borderRadius: 8,
+  borderRadius: 'var(--radius-md)',
   cursor: 'pointer',
-  fontSize: 14,
+  fontSize: '0.875rem',
   fontWeight: 500,
 };
 
 const contentStyle: React.CSSProperties = {
   maxWidth: 600,
-  margin: '24px auto',
-  padding: '0 16px',
+  margin: '1.5rem auto',
+  padding: '0 1rem',
 };
 
 const cardStyle: React.CSSProperties = {
-  background: 'white',
-  borderRadius: 12,
-  padding: 20,
-  marginBottom: 16,
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  background: 'var(--bg-secondary)',
+  borderRadius: 'var(--radius-lg)',
+  padding: '1.25rem',
+  marginBottom: '1rem',
+  boxShadow: 'var(--shadow-sm)',
+  border: '1px solid var(--border-color)',
 };
 
 const infoGridStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 6,
-  fontSize: 14,
+  fontSize: '0.875rem',
 };
 
 const avatarStyle: React.CSSProperties = {
   width: 48,
   height: 48,
   borderRadius: 24,
-  background: '#eef2ff',
+  background: 'var(--primary-light)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -165,13 +167,13 @@ const actionBtnStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-  padding: '12px 20px',
-  background: '#6366f1',
-  color: 'white',
+  padding: '0.75rem 1.25rem',
+  background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+  color: 'var(--text-light)',
   border: 'none',
-  borderRadius: 8,
+  borderRadius: 'var(--radius-md)',
   cursor: 'pointer',
-  fontSize: 14,
+  fontSize: '0.875rem',
   fontWeight: 500,
 };
 
