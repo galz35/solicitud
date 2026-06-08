@@ -417,7 +417,9 @@ export const SolicitudWizard: React.FC = () => {
                 label="Cédula Identidad" 
                 id="cedula" 
                 value={datosGenerales.cedula} 
-                disabled 
+                onChange={(e) => setDatosGenerales({ ...datosGenerales, cedula: e.target.value.toUpperCase() })}
+                disabled={!invToken && !!apiService.getCurrentUser()}
+                error={formErrors.cedula}
                 required 
               />
               <FormField 
