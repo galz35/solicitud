@@ -314,16 +314,15 @@ export async function guardarFamiliar(req: Request, res: Response, next: NextFun
       const pool = await getConnectionPool();
       const result = await pool
         .request()
-        .input('id_df', sql.Int, id_df)
         .input('candidato_id', sql.Int, candidato_id)
         .input('nombre', sql.VarChar(100), nombre)
         .input('parentesco', sql.VarChar(50), parentesco)
         .input('l_trabajo', sql.VarChar(100), l_trabajo)
         .input('direccion', sql.VarChar(255), direccion)
-        .output('id_df_out', sql.Int)
+        .output('id_df', sql.Int, id_df || null)
         .execute('sp_GuardarFamiliar');
       
-      resultId = result.output.id_df_out || id_df;
+      resultId = result.output.id_df;
     }
 
     res.status(200).json({ status: 'success', message: 'Familiar guardado', id_df: resultId });
@@ -379,7 +378,6 @@ export async function guardarAcademico(req: Request, res: Response, next: NextFu
       const pool = await getConnectionPool();
       const result = await pool
         .request()
-        .input('id_da', sql.Int, id_da)
         .input('candidato_id', sql.Int, candidato_id)
         .input('nivel_academico', sql.VarChar(2), nivel_academico)
         .input('titulo', sql.VarChar(150), titulo)
@@ -387,10 +385,10 @@ export async function guardarAcademico(req: Request, res: Response, next: NextFu
         .input('ult_ano_aprob', sql.Int, ult_ano_aprob)
         .input('institucion', sql.VarChar(150), institucion)
         .input('duracion', sql.VarChar(50), duracion)
-        .output('id_da_out', sql.Int)
+        .output('id_da', sql.Int, id_da || null)
         .execute('sp_GuardarAcademico');
       
-      resultId = result.output.id_da_out || id_da;
+      resultId = result.output.id_da;
     }
 
     res.status(200).json({ status: 'success', message: 'Dato académico guardado', id_da: resultId });
@@ -446,7 +444,6 @@ export async function guardarExperiencia(req: Request, res: Response, next: Next
       const pool = await getConnectionPool();
       const result = await pool
         .request()
-        .input('id_ep', sql.Int, id_ep)
         .input('candidato_id', sql.Int, candidato_id)
         .input('empresa', sql.VarChar(100), empresa)
         .input('giro', sql.VarChar(100), giro)
@@ -455,10 +452,10 @@ export async function guardarExperiencia(req: Request, res: Response, next: Next
         .input('f_ingreso', sql.Date, f_ingreso ? new Date(f_ingreso) : null)
         .input('f_salida', sql.Date, f_salida ? new Date(f_salida) : null)
         .input('motivo_salida', sql.VarChar(255), motivo_salida)
-        .output('id_ep_out', sql.Int)
+        .output('id_ep', sql.Int, id_ep || null)
         .execute('sp_GuardarExperiencia');
       
-      resultId = result.output.id_ep_out || id_ep;
+      resultId = result.output.id_ep;
     }
 
     res.status(200).json({ status: 'success', message: 'Experiencia profesional guardada', id_ep: resultId });
@@ -514,7 +511,6 @@ export async function guardarReferencia(req: Request, res: Response, next: NextF
       const pool = await getConnectionPool();
       const result = await pool
         .request()
-        .input('id_ref', sql.Int, id_ref)
         .input('candidato_id', sql.Int, candidato_id)
         .input('nombre_completo', sql.VarChar(100), nombre_completo)
         .input('direccion', sql.VarChar(255), direccion)
@@ -523,10 +519,10 @@ export async function guardarReferencia(req: Request, res: Response, next: NextF
         .input('telefono', sql.VarChar(20), telefono)
         .input('tipo_relacion', sql.VarChar(50), tipo_relacion)
         .input('interno', sql.Char(1), interno)
-        .output('id_ref_out', sql.Int)
+        .output('id_ref', sql.Int, id_ref || null)
         .execute('sp_GuardarReferencia');
       
-      resultId = result.output.id_ref_out || id_ref;
+      resultId = result.output.id_ref;
     }
 
     res.status(200).json({ status: 'success', message: 'Referencia guardada', id_ref: resultId });
