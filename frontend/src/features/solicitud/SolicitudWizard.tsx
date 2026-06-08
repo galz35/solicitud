@@ -443,7 +443,7 @@ export const SolicitudWizard: React.FC = () => {
     limpiarProgress();
     showToast('✅ Solicitud guardada exitosamente', 'success');
     setTimeout(() => {
-      navigate(`/imprimir/${cedula || datosGenerales.cedula}`);
+      navigate(`/impresion/${cedula || datosGenerales.cedula}`);
     }, 800);
   };
 

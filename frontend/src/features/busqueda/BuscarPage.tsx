@@ -154,7 +154,7 @@ export const BuscarPage: React.FC = () => {
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
                         <button 
-                          onClick={() => navigate(`/imprimir/${cand.cedula}`)}
+                          onClick={() => navigate(`/impresion/${cand.cedula}`)}
                           className="btn-secondary" 
                           style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                           title="Imprimir / Ver Solicitud"
