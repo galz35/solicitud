@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api-solicitud';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -50,6 +50,25 @@ export const apiService = {
     return response.data;
   },
 
+  async loginEmail(email: string, password: string) {
+    const response = await api.post('/auth/login-email', { email, password });
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('candidato', JSON.stringify(response.data.candidato));
+    }
+    return response.data;
+  },
+
+  async validarToken(token: string) {
+    const response = await api.get(`/auth/validar-token/${token}`);
+    return response.data;
+  },
+
+  async registro(token: string, email: string, password: string) {
+    const response = await api.post('/auth/registro', { token, email, password });
+    return response.data;
+  },
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('candidato');
@@ -58,6 +77,11 @@ export const apiService = {
   getCurrentUser() {
     const cand = localStorage.getItem('candidato');
     return cand ? JSON.parse(cand) : null;
+  },
+
+  async getMe() {
+    const response = await api.get('/candidatos/me');
+    return response.data;
   },
 
   // 2. CANDIDATO (COMPLETO)

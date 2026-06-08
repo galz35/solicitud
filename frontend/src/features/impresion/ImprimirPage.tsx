@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Printer, ChevronLeft, Briefcase, GraduationCap, Users, Languages, Star, Phone } from 'lucide-react';
+import { Printer, ChevronLeft, Briefcase } from 'lucide-react';
 import { apiService } from '../../services/api.service';
 import { Toast, ToastType } from '../../components/ui/Toast';
 

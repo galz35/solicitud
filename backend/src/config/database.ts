@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const dbConfig: sql.config = {
-  user: process.env.DB_USER || 'Reclutamiento',
-  password: process.env.DB_PASSWORD || 'sel3Rh2011',
-  server: process.env.DB_SERVER || '192.168.8.234',
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || 'TuPasswordFuerte!2026',
+  server: process.env.DB_SERVER || 'localhost',
   database: process.env.DB_NAME || 'Sol_Empleo',
   options: {
     encrypt: process.env.DB_ENCRYPT === 'true', // true para Azure, false para local

@@ -70,3 +70,31 @@ export const candidatoIdiomaSchema = z.object({
     n_conversacion: z.number().int().min(0).max(100),
   }),
 });
+
+// 7. VALIDACIÓN DE LOGIN POR EMAIL
+export const loginEmailSchema = z.object({
+  body: z.object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  }),
+});
+
+// 8. VALIDACIÓN DE REGISTRO
+export const registroSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, 'Token requerido'),
+    email: z.string().email('Email inválido'),
+    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  }),
+});
+
+// 9. VALIDACIÓN DE INVITACIÓN (admin)
+export const invitacionSchema = z.object({
+  body: z.object({
+    cedula: z.string().min(1, 'Cédula requerida'),
+    nombres: z.string().optional().nullable(),
+    apellidos: z.string().optional().nullable(),
+    celular: z.string().optional().nullable(),
+    dias_expiracion: z.number().int().positive().optional(),
+  }),
+});

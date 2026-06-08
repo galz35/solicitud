@@ -6,6 +6,7 @@ interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement | HT
   required?: boolean;
   as?: 'input' | 'select' | 'textarea';
   children?: React.ReactNode;
+  rows?: number;
 }
 
 export const FormField = React.forwardRef<HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement, FormFieldProps>(

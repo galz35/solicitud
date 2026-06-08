@@ -10,6 +10,9 @@ import { validate } from '../middleware/validation.middleware';
 import { registrarCandidatoSchema } from '../validators/candidato.validator';
 import {
   loginSchema,
+  loginEmailSchema,
+  registroSchema,
+  invitacionSchema,
   familiarSchema,
   academicoSchema,
   experienciaSchema,
@@ -23,12 +26,18 @@ const router = Router();
 // RUTAS PÚBLICAS / AUTENTICACIÓN
 // ==========================================
 router.post('/auth/login', validate(loginSchema), authController.login);
+router.post('/auth/login-email', validate(loginEmailSchema), authController.loginEmail);
+router.post('/auth/registro', validate(registroSchema), authController.registro);
+router.get('/auth/validar-token/:token', authController.validarToken);
 
 
 // ==========================================
 // RUTAS PROTEGIDAS (MÉTODO COMÚN POR JWT)
 // ==========================================
 router.use(protect);
+
+// Perfil del candidato autenticado (por JWT, no por params)
+router.get('/candidatos/me', candidatoController.getMe);
 
 // 1. Catálogos
 router.get('/catalogos/idiomas', catalogoController.getIdiomas);
@@ -66,8 +75,9 @@ router.delete('/candidatos/:cedula/idiomas/:cod_idioma', candidatoController.eli
 
 
 // ==========================================
-// RUTAS EXCLUSIVAS DE ADMINISTRADOR (buscar.asp)
+// RUTAS EXCLUSIVAS DE ADMINISTRADOR
 // ==========================================
+router.post('/admin/invitacion', restrictTo('admin'), validate(invitacionSchema), authController.generarInvitacion);
 router.get('/buscar', restrictTo('admin'), busquedaController.buscarCandidatos);
 
 export default router;

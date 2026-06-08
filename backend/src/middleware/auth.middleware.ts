@@ -24,11 +24,17 @@ export function protect(req: Request, res: Response, next: NextFunction) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as {
       cedula: string;
+      candidato_id?: number;
+      email?: string;
+      method?: string;
       rol?: 'admin' | 'candidato';
     };
 
     req.user = {
       cedula: decoded.cedula,
+      candidato_id: decoded.candidato_id,
+      email: decoded.email,
+      method: decoded.method,
       rol: decoded.rol || 'candidato',
     };
 

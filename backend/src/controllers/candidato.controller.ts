@@ -19,6 +19,60 @@ async function getCandidatoIdByCedula(cedula: string, pool?: any): Promise<numbe
   }
 }
 
+// 1b. OBTENER PERFIL DEL CANDIDATO AUTENTICADO (por JWT)
+export async function getMe(req: Request, res: Response, next: NextFunction) {
+  const cedula = req.user?.cedula;
+
+  if (!cedula) {
+    res.status(401).json({ status: 'fail', message: 'No autenticado' });
+    return;
+  }
+
+  try {
+    if (isUsingFallback()) {
+      const candidato = Array.from(memoryDb.candidatos.values()).find(
+        (c) => c.cedula.toUpperCase() === cedula.toUpperCase()
+      );
+      if (!candidato) {
+        res.status(404).json({ status: 'fail', message: 'Candidato no encontrado' });
+        return;
+      }
+      res.status(200).json({ status: 'success', data: { candidato } });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+    const result: any = await pool
+      .request()
+      .input('cedula', sql.VarChar(20), cedula.toUpperCase())
+      .execute('sp_ObtenerCandidatoCompleto');
+
+    const recordsets = result.recordsets as any[][];
+    const candidato = recordsets[0][0];
+    if (!candidato) {
+      res.status(404).json({ status: 'fail', message: 'Candidato no encontrado' });
+      return;
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        candidato,
+        saludDeportes: recordsets[1][0] || null,
+        puesto: recordsets[2][0] || null,
+        emergencia: recordsets[3][0] || null,
+        familiares: recordsets[4] || [],
+        academicos: recordsets[5] || [],
+        experiencia: recordsets[6] || [],
+        referencias: recordsets[7] || [],
+        idiomas: recordsets[8] || [],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 1. OBTENER CANDIDATO COMPLETO
 export async function getCandidato(req: Request, res: Response, next: NextFunction) {
   const { cedula } = req.params;
@@ -70,12 +124,13 @@ export async function getCandidato(req: Request, res: Response, next: NextFuncti
       });
     } else {
       const pool = await getConnectionPool();
-      const result = await pool
+      const result: any = await pool
         .request()
         .input('cedula', sql.VarChar(20), cleanCedula)
         .execute('sp_ObtenerCandidatoCompleto');
 
-      const candidato = result.recordsets[0][0];
+      const recordsets = result.recordsets as any[][];
+      const candidato = recordsets[0][0];
       if (!candidato) {
         res.status(404).json({
           status: 'fail',
@@ -88,14 +143,14 @@ export async function getCandidato(req: Request, res: Response, next: NextFuncti
         status: 'success',
         data: {
           candidato,
-          saludDeportes: result.recordsets[1][0] || null,
-          puesto: result.recordsets[2][0] || null,
-          emergencia: result.recordsets[3][0] || null,
-          familiares: result.recordsets[4] || [],
-          academicos: result.recordsets[5] || [],
-          experiencia: result.recordsets[6] || [],
-          referencias: result.recordsets[7] || [],
-          idiomas: result.recordsets[8] || [],
+          saludDeportes: recordsets[1][0] || null,
+          puesto: recordsets[2][0] || null,
+          emergencia: recordsets[3][0] || null,
+          familiares: recordsets[4] || [],
+          academicos: recordsets[5] || [],
+          experiencia: recordsets[6] || [],
+          referencias: recordsets[7] || [],
+          idiomas: recordsets[8] || [],
         },
       });
     }

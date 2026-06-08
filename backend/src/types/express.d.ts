@@ -5,6 +5,9 @@ declare global {
     interface Request {
       user?: {
         cedula: string;
+        candidato_id?: number;
+        email?: string;
+        method?: string;
         rol?: 'admin' | 'candidato';
       };
     }

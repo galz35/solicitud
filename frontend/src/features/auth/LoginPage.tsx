@@ -1,19 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, HelpCircle } from 'lucide-react';
+import { LogIn, Mail } from 'lucide-react';
 import { FormField } from '../../components/ui/FormField';
 import { Toast, ToastType } from '../../components/ui/Toast';
 import { apiService } from '../../services/api.service';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [modo, setModo] = useState<'cedula' | 'email'>('cedula');
+
+  // Cedula login
   const [cedula, setCedula] = useState('');
+
+  // Email login
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const formatCedula = (val: string) => {
-    // Formatear automáticamente quitando guiones y forzando mayúscula final
     return val.replace(/[^0-9a-zA-Z]/g, '').toUpperCase();
   };
 
@@ -21,24 +28,19 @@ export const LoginPage: React.FC = () => {
     setToast({ message, type });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLoginCedula = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     const cleanCedula = formatCedula(cedula);
-    
-    // Validación regex de cédula
     const cedulaRegex = /^\d{13}[A-Z]$/;
     if (!cedulaRegex.test(cleanCedula)) {
-      setError('Formato inválido. Deben ser exactamente 13 dígitos seguidos de una letra mayúscula. Ej: 0012508900012A');
+      setError('Formato inválido. Ej: 0012508900012A');
       return;
     }
-
     setIsLoading(true);
     try {
       const res = await apiService.login(cleanCedula);
       showToast('Sesión iniciada correctamente.', 'success');
-
       setTimeout(() => {
         if (res.candidato.rol === 'admin') {
           navigate('/buscar');
@@ -47,118 +49,169 @@ export const LoginPage: React.FC = () => {
         }
       }, 800);
     } catch (err: any) {
-      showToast(
-        err.response?.data?.message || 'Error al conectar con el servidor.',
-        'error'
-      );
+      setError(err.response?.data?.message || 'Error al iniciar sesión');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoginEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!email || !password) {
+      setError('Completa todos los campos');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await apiService.loginEmail(email, password);
+      showToast('Sesión iniciada correctamente.', 'success');
+      setTimeout(() => navigate('/dashboard'), 800);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Credenciales incorrectas');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '85vh',
-        padding: '1rem',
-      }}
-    >
-      <div
-        className="card"
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          padding: '2.5rem 2rem',
-          textAlign: 'center',
-          border: '1px solid var(--border-color)',
-        }}
-      >
-        {/* Encabezado Logo / Título */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1rem auto',
-              boxShadow: 'var(--shadow-md)',
-            }}
-          >
-            <LogIn size={28} color="#ffffff" />
-          </div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, fontFamily: 'var(--font-title)' }}>
-            Solicitud de Empleo
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            Ingresa tu cédula de identidad para iniciar o continuar tu registro.
-          </p>
+    <div style={containerStyle}>
+      <div style={cardStyle}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <LogIn size={40} color="#6366f1" />
+          <h2 style={{ margin: '8px 0 4px' }}>Solicitud de Empleo</h2>
+          <p style={{ color: '#64748b', fontSize: 14 }}>Inicia sesión para continuar</p>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleLogin} style={{ textAlign: 'left' }}>
-          <FormField
-            label="Cédula de Identidad"
-            id="cedula-login"
-            value={cedula}
-            onChange={(e) => setCedula(e.target.value)}
-            error={error}
-            placeholder="Ej: 0012508900012A"
-            required
-            maxLength={14}
-            disabled={isLoading}
-          />
-
+        {/* Toggle modo */}
+        <div style={toggleStyle}>
           <button
-            type="submit"
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              marginTop: '1.5rem',
-            }}
-            disabled={isLoading}
+            onClick={() => setModo('cedula')}
+            style={{ ...tabBtnStyle, ...(modo === 'cedula' ? tabActiveStyle : {}) }}
           >
-            {isLoading ? 'Verificando...' : 'Ingresar al Portal'}
+            Cédula
           </button>
-        </form>
+          <button
+            onClick={() => setModo('email')}
+            style={{ ...tabBtnStyle, ...(modo === 'email' ? tabActiveStyle : {}) }}
+          >
+            <Mail size={14} style={{ marginRight: 4 }} /> Email
+          </button>
+        </div>
 
-        {/* Mensaje Informativo / Instrucciones */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.5rem',
-            backgroundColor: 'var(--bg-tertiary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.75rem',
-            marginTop: '2rem',
-            textAlign: 'left',
-          }}
-        >
-          <HelpCircle size={18} color="var(--text-secondary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            <strong>¿Nuevo registro?</strong> Digita tu cédula y el sistema abrirá un formulario vacío.
-            <br />
-            <strong>¿Ya registrado?</strong> Ingresa con la misma cédula para consultar o imprimir tu solicitud.
-          </p>
+        {modo === 'cedula' ? (
+          <form onSubmit={handleLoginCedula}>
+            <FormField
+              label="Cédula"
+              id="cedula"
+              value={cedula}
+              onChange={(e: any) => setCedula(e.target.value)}
+              required
+              placeholder="0012508900012A"
+            />
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: -12, marginBottom: 16 }}>
+              13 dígitos + letra mayúscula
+            </p>
+            {error && <p style={{ color: '#ef4444', fontSize: 14 }}>{error}</p>}
+            <button type="submit" style={btnStyle} disabled={isLoading}>
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleLoginEmail}>
+            <FormField
+              label="Correo electrónico"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e: any) => setEmail(e.target.value)}
+              required
+              placeholder="tu@correo.com"
+            />
+            <FormField
+              label="Contraseña"
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e: any) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+            />
+            {error && <p style={{ color: '#ef4444', fontSize: 14 }}>{error}</p>}
+            <button type="submit" style={btnStyle} disabled={isLoading}>
+              {isLoading ? 'Entrando...' : 'Iniciar sesión'}
+            </button>
+          </form>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <a href="/registro" style={{ color: '#6366f1', fontSize: 14 }}>
+            ¿Tienes un enlace de invitación? Regístrate aquí
+          </a>
         </div>
       </div>
-
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
+};
+
+const containerStyle: React.CSSProperties = {
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  padding: 20,
+};
+
+const cardStyle: React.CSSProperties = {
+  background: 'white',
+  borderRadius: 16,
+  padding: 32,
+  width: '100%',
+  maxWidth: 420,
+  boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+};
+
+const toggleStyle: React.CSSProperties = {
+  display: 'flex',
+  background: '#f1f5f9',
+  borderRadius: 8,
+  padding: 4,
+  marginBottom: 20,
+};
+
+const tabBtnStyle: React.CSSProperties = {
+  flex: 1,
+  padding: '8px 16px',
+  border: 'none',
+  background: 'transparent',
+  borderRadius: 6,
+  cursor: 'pointer',
+  fontSize: 14,
+  fontWeight: 500,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const tabActiveStyle: React.CSSProperties = {
+  background: 'white',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  color: '#6366f1',
+  fontWeight: 600,
+};
+
+const btnStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px 24px',
+  background: '#6366f1',
+  color: 'white',
+  border: 'none',
+  borderRadius: 8,
+  fontSize: 16,
+  fontWeight: 600,
+  cursor: 'pointer',
+  marginTop: 16,
 };
