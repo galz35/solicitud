@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Save, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Save, FileText } from 'lucide-react';
 import { StepWizard } from '../../components/wizard/StepWizard';
 import { FormField } from '../../components/ui/FormField';
 import { Modal } from '../../components/ui/Modal';
@@ -124,20 +124,26 @@ export const SolicitudWizard: React.FC = () => {
 
   // PASOS WIZARD
   const steps = [
-    { id: 1, label: 'Datos Generales' },
-    { id: 2, label: 'Datos Familiares' },
-    { id: 3, label: 'Educación' },
-    { id: 4, label: 'Idiomas' },
-    { id: 5, label: 'Experiencia Laboral' },
-    { id: 6, label: 'Puesto Solicitado' },
-    { id: 7, label: 'Referencias' },
-    { id: 8, label: 'Resumen' },
+    { id: 1, label: 'Datos Personales', description: 'Completá tus datos generales, dirección, salud y contacto de emergencia' },
+    { id: 2, label: 'Familiares', description: 'Agregá los datos de tus familiares (padres, hermanos, cónyuge, hijos)' },
+    { id: 3, label: 'Educación', description: 'Registrá tu formación académica: primaria, secundaria, técnica o universitaria' },
+    { id: 4, label: 'Idiomas', description: 'Indicá qué idiomas hablás y tu nivel de lectura, escritura y conversación' },
+    { id: 5, label: 'Experiencia', description: 'Contanos tu experiencia laboral previa (empresas, cargos, fechas)' },
+    { id: 6, label: 'Puesto', description: 'Decinos qué puesto te interesa, tus expectativas salariales y disponibilidad' },
+    { id: 7, label: 'Referencias', description: 'Agregá referencias personales o laborales que puedan dar fe de tu trayectoria' },
+    { id: 8, label: 'Resumen', description: 'Revisá toda tu información antes de finalizar. Podés editar cada sección' },
   ];
 
   // MANEJO DE NAVEGACIÓN
   const handleNext = async () => {
     setFormErrors({});
-    
+
+    // Si es el último paso, finalizar
+    if (currentStep === steps.length) {
+      handleFinalizar();
+      return;
+    }
+
     if (currentStep === 1) {
       // Validar datos generales con Zod
       const valResult = datosGeneralesSchema.safeParse(datosGenerales);
@@ -345,7 +351,15 @@ export const SolicitudWizard: React.FC = () => {
 
   return (
     <div style={{ minHeight: '85vh', position: 'relative' }}>
-      <StepWizard currentStep={currentStep} steps={steps} onStepChange={setCurrentStep}>
+      <StepWizard
+        currentStep={currentStep}
+        steps={steps}
+        onStepChange={setCurrentStep}
+        onNext={handleNext}
+        onBack={handleBack}
+        isFirst={currentStep === 1}
+        isLast={currentStep === 8}
+      >
         
         {/* ========================================================== */}
         {/* PASO 1: DATOS GENERALES */}
@@ -725,12 +739,6 @@ export const SolicitudWizard: React.FC = () => {
               />
             </div>
 
-            {/* BOTÓN CONTINUAR */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -780,15 +788,6 @@ export const SolicitudWizard: React.FC = () => {
                 </table>
               </div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -849,15 +848,6 @@ export const SolicitudWizard: React.FC = () => {
                 </table>
               </div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -907,15 +897,6 @@ export const SolicitudWizard: React.FC = () => {
                 </table>
               </div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -965,15 +946,6 @@ export const SolicitudWizard: React.FC = () => {
                 </table>
               </div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -1043,15 +1015,6 @@ export const SolicitudWizard: React.FC = () => {
               onChange={(e) => setPuesto({ ...puesto, experiencia: e.target.value })} 
               placeholder="Describa brevemente su trayectoria o habilidades relevantes..."
             />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -1101,15 +1064,6 @@ export const SolicitudWizard: React.FC = () => {
                 </table>
               </div>
             )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleNext} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Siguiente Paso <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
 
@@ -1161,15 +1115,6 @@ export const SolicitudWizard: React.FC = () => {
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Referencias</span>
                 </div>
               </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2.5rem' }}>
-              <button onClick={handleBack} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ChevronLeft size={18} /> Atrás
-              </button>
-              <button onClick={handleFinalizar} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-success)', background: 'linear-gradient(135deg, var(--color-success), #059669)' }}>
-                Finalizar e Imprimir <FileText size={18} />
-              </button>
             </div>
           </div>
         )}
