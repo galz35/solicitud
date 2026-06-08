@@ -7,6 +7,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Toast, ToastType } from '../../components/ui/Toast';
 import { apiService } from '../../services/api.service';
 import { datosGeneralesSchema, familiarSchema, academicoSchema, experienciaSchema, referenciaSchema, puestoSchema } from '../../schemas/solicitud.schema';
+import { departamentos, getMunicipios } from '../../data/nicaragua';
 
 export const SolicitudWizard: React.FC = () => {
   const navigate = useNavigate();
@@ -499,22 +500,28 @@ export const SolicitudWizard: React.FC = () => {
               Dirección y Vivienda
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-              <FormField 
-                label="Departamento" 
-                id="departamento_dom" 
-                value={datosGenerales.departamento_dom || ''} 
-                onChange={(e) => setDatosGenerales({ ...datosGenerales, departamento_dom: e.target.value })} 
-                error={formErrors.departamento_dom}
-                required 
-              />
-              <FormField 
-                label="Municipio / Ciudad" 
-                id="ciudad_dom" 
-                value={datosGenerales.ciudad_dom || ''} 
-                onChange={(e) => setDatosGenerales({ ...datosGenerales, ciudad_dom: e.target.value })} 
-                error={formErrors.ciudad_dom}
-                required 
-              />
+              <FormField label="Departamento" id="departamento_dom" as="select"
+                value={datosGenerales.departamento_dom || ''}
+                onChange={(e: any) => {
+                  setDatosGenerales({ ...datosGenerales, departamento_dom: e.target.value, ciudad_dom: '' });
+                }}
+                error={formErrors.departamento_dom} required>
+                <option value="">-- Seleccione --</option>
+                {departamentos.map(d => (
+                  <option key={d.id} value={d.nombre}>{d.nombre}</option>
+                ))}
+              </FormField>
+              <FormField label="Municipio / Ciudad" id="ciudad_dom" as="select"
+                value={datosGenerales.ciudad_dom || ''}
+                onChange={(e: any) => setDatosGenerales({ ...datosGenerales, ciudad_dom: e.target.value })}
+                error={formErrors.ciudad_dom} required>
+                <option value="">-- Seleccione --</option>
+                {getMunicipios(
+                  departamentos.find(d => d.nombre === datosGenerales.departamento_dom)?.id || ''
+                ).map(m => (
+                  <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                ))}
+              </FormField>
               <FormField 
                 label="Tipo de Casa" 
                 id="tipo_casa" 
