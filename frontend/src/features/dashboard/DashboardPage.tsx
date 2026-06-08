@@ -25,14 +25,7 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <h1 style={{ margin: 0, fontSize: 20 }}>Mi Solicitud de Empleo</h1>
-        <button onClick={handleLogout} style={logoutBtnStyle}>
-          <LogOut size={16} /> Salir
-        </button>
-      </div>
-
+    <div>
       <div style={contentStyle}>
         {/* Info del candidato */}
         {candidato?.candidato && (

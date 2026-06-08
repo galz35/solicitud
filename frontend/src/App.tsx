@@ -7,17 +7,19 @@ import { DashboardPage } from './features/dashboard/DashboardPage';
 import { SolicitudWizard } from './features/solicitud/SolicitudWizard';
 import { BuscarPage } from './features/busqueda/BuscarPage';
 import { AdminDashboardPage } from './features/admin/AdminDashboardPage';
+import { AdminUsuariosPage } from './features/admin/AdminUsuariosPage';
 import { ImprimirPage } from './features/impresion/ImprimirPage';
+import { Layout } from './components/layout/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
-  return <>{children}</>;
+  return <Layout>{children}</Layout>;
 }
 
 export default function App() {
   return (
-      <BrowserRouter basename="/solicitud">
+    <BrowserRouter basename="/solicitud">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegistroPage />} />
@@ -26,6 +28,7 @@ export default function App() {
         <Route path="/solicitud" element={<ProtectedRoute><SolicitudWizard /></ProtectedRoute>} />
         <Route path="/buscar" element={<ProtectedRoute><BuscarPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
+        <Route path="/admin/usuarios" element={<ProtectedRoute><AdminUsuariosPage /></ProtectedRoute>} />
         <Route path="/impresion/:cedula" element={<ProtectedRoute><ImprimirPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

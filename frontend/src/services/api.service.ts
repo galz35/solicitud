@@ -181,6 +181,16 @@ export const apiService = {
     return response.data;
   },
 
+  async asignarAdmin(cedula: string) {
+    const response = await api.post('/admin/asignar', { cedula });
+    return response.data;
+  },
+
+  async listarUsuarios() {
+    const response = await api.get('/admin/usuarios');
+    return response.data;
+  },
+
   async exportarCandidatos(query = '') {
     const response = await api.get('/exportar', {
       params: { q: query },

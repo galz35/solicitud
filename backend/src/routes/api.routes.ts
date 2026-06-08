@@ -80,6 +80,8 @@ router.delete('/candidatos/:cedula/idiomas/:cod_idioma', candidatoController.eli
 // RUTAS EXCLUSIVAS DE ADMINISTRADOR
 // ==========================================
 router.post('/admin/invitacion', restrictTo('admin'), validate(invitacionSchema), authController.generarInvitacion);
+router.post('/admin/asignar', restrictTo('admin'), authController.asignarAdmin);
+router.get('/admin/usuarios', restrictTo('admin'), authController.listarUsuarios);
 router.get('/buscar', restrictTo('admin'), busquedaController.buscarCandidatos);
 router.get('/exportar', restrictTo('admin'), busquedaController.exportarCandidatos);
 

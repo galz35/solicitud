@@ -66,16 +66,8 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-        <h1 style={{ margin: 0, fontSize: '1.25rem' }}>Admin RRHH - Solicitudes</h1>
-        <button onClick={() => { apiService.logout(); navigate('/login'); }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem', background: 'var(--color-error-light)', color: 'var(--color-error)', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontSize: '0.875rem' }}>
-          <LogOut size={16} /> Salir
-        </button>
-      </div>
-
-      <div style={{ maxWidth: 1000, margin: '1.5rem auto', padding: '0 1rem' }}>
+    <div>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', border: '1px solid var(--border-color)', textAlign: 'center' }}>

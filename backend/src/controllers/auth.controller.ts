@@ -7,10 +7,9 @@ import { getConnectionPool, isUsingFallback, memoryDb, sql } from '../config/dat
 const JWT_SECRET = process.env.JWT_SECRET || 'sel3Rh2026_super_secret_token_key_for_authentication';
 const SSO_SECRET = process.env.SSO_SECRET || 'ClaroSSO_Shared_Secret_2026_!#';
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '2h';
-const ADMIN_CEDULA = '0000000000000A';
 
 // ==========================================
-// LOGIN POR CÉDULA (admin o candidato legacy)
+// LOGIN POR CÉDULA 
 // ==========================================
 export async function login(req: Request, res: Response, next: NextFunction) {
   const { cedula } = req.body;
@@ -20,21 +19,33 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     let rol: 'admin' | 'candidato' = 'candidato';
     let existe = false;
 
-    if (cleanCedula === ADMIN_CEDULA) {
-      rol = 'admin';
-      existe = true;
+    if (isUsingFallback()) {
+      existe = Array.from(memoryDb.candidatos.values()).some(
+        (cand) => cand.cedula.toUpperCase() === cleanCedula
+      );
     } else {
-      if (isUsingFallback()) {
-        existe = Array.from(memoryDb.candidatos.values()).some(
-          (cand) => cand.cedula.toUpperCase() === cleanCedula
-        );
+      const pool = await getConnectionPool();
+
+      // Buscar si existe como usuario con rol admin
+      const userRes = await pool
+        .request()
+        .input('cedula', sql.VarChar(20), cleanCedula)
+        .query(`
+          SELECT u.rol FROM tbl_usuarios_candidatos u
+          INNER JOIN tbl_candidatos c ON c.candidato_id = u.candidato_id
+          WHERE c.cedula = @cedula
+        `);
+      
+      if (userRes.recordset.length > 0) {
+        existe = true;
+        rol = userRes.recordset[0].rol || 'candidato';
       } else {
-        const pool = await getConnectionPool();
-        const result = await pool
+        // Buscar solo en candidatos
+        const candRes = await pool
           .request()
           .input('cedula', sql.VarChar(20), cleanCedula)
           .query('SELECT candidato_id FROM tbl_candidatos WHERE cedula = @cedula');
-        existe = (result.recordset.length > 0);
+        existe = (candRes.recordset.length > 0);
       }
     }
 
@@ -274,7 +285,7 @@ export async function loginEmailCedula(req: Request, res: Response, next: NextFu
       .input('email', sql.VarChar(150), cleanEmail)
       .input('cedula', sql.VarChar(20), cleanCedula)
       .query(`
-        SELECT u.id_usuario, u.email, u.candidato_id, u.activo,
+        SELECT u.id_usuario, u.email, u.candidato_id, u.activo, u.rol,
                c.cedula, c.pnombre, c.papellido
         FROM tbl_usuarios_candidatos u
         INNER JOIN tbl_candidatos c ON c.candidato_id = u.candidato_id
@@ -287,11 +298,13 @@ export async function loginEmailCedula(req: Request, res: Response, next: NextFu
     }
 
     const user = userResult.recordset[0];
+    const rol = user.rol || 'candidato';
 
     const token = jwt.sign({
       cedula: user.cedula,
       candidato_id: user.candidato_id,
       email: user.email,
+      rol,
       method: 'email_cedula',
     }, JWT_SECRET, { expiresIn: '2h' });
 
@@ -303,6 +316,7 @@ export async function loginEmailCedula(req: Request, res: Response, next: NextFu
         candidato_id: user.candidato_id,
         nombre: `${user.pnombre} ${user.papellido}`,
         email: user.email,
+        rol,
         existe: true,
       },
     });
@@ -467,10 +481,11 @@ export async function ssoPortalLogin(req: Request, res: Response, next: NextFunc
     }
 
     // Asegurar que exista en tbl_usuarios_candidatos
+    let userRol = 'candidato';
     const existingUser = await pool
       .request()
       .input('candidato_id', sql.Int, candidatoId)
-      .query('SELECT id_usuario FROM tbl_usuarios_candidatos WHERE candidato_id = @candidato_id');
+      .query('SELECT id_usuario, rol FROM tbl_usuarios_candidatos WHERE candidato_id = @candidato_id');
 
     if (existingUser.recordset.length === 0) {
       await pool
@@ -481,16 +496,18 @@ export async function ssoPortalLogin(req: Request, res: Response, next: NextFunc
           INSERT INTO tbl_usuarios_candidatos (candidato_id, email, password_hash)
           VALUES (@candidato_id, @email, '')
         `);
-    } else if (email && existingUser.recordset.length > 0) {
-      // Actualizar email si está vacío
-      await pool
-        .request()
-        .input('candidato_id', sql.Int, candidatoId)
-        .input('email', sql.VarChar(150), email)
-        .query(`
-          UPDATE tbl_usuarios_candidatos SET email = @email, fecha_modificacion = GETDATE()
-          WHERE candidato_id = @candidato_id AND (email IS NULL OR email = '')
-        `);
+    } else {
+      userRol = existingUser.recordset[0].rol || 'candidato';
+      if (email && existingUser.recordset[0].id_usuario) {
+        await pool
+          .request()
+          .input('candidato_id', sql.Int, candidatoId)
+          .input('email', sql.VarChar(150), email)
+          .query(`
+            UPDATE tbl_usuarios_candidatos SET email = @email, fecha_modificacion = GETDATE()
+            WHERE candidato_id = @candidato_id AND (email IS NULL OR email = '')
+          `);
+      }
     }
 
     // Generar token de solicitud
@@ -498,6 +515,7 @@ export async function ssoPortalLogin(req: Request, res: Response, next: NextFunc
       cedula,
       candidato_id: candidatoId,
       email,
+      rol: userRol,
       method: 'sso_portal',
     }, JWT_SECRET, { expiresIn: '2h' });
 
@@ -509,9 +527,98 @@ export async function ssoPortalLogin(req: Request, res: Response, next: NextFunc
         candidato_id: candidatoId,
         nombre,
         email,
+        rol: userRol,
         existe: true,
         apps,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
+// ASIGNAR ROL ADMIN (solo desde la BD o endpoint interno)
+// ==========================================
+export async function asignarAdmin(req: Request, res: Response, next: NextFunction) {
+  const { cedula } = req.body;
+  const cleanCedula = cedula.trim().toUpperCase();
+
+  try {
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+
+    // Buscar candidato
+    const candRes = await pool
+      .request()
+      .input('cedula', sql.VarChar(20), cleanCedula)
+      .query('SELECT candidato_id FROM tbl_candidatos WHERE cedula = @cedula');
+
+    if (candRes.recordset.length === 0) {
+      res.status(404).json({ status: 'fail', message: 'Candidato no encontrado' });
+      return;
+    }
+
+    const candidatoId = candRes.recordset[0].candidato_id;
+
+    // Verificar si existe en usuarios
+    const userRes = await pool
+      .request()
+      .input('candidato_id', sql.Int, candidatoId)
+      .query('SELECT id_usuario FROM tbl_usuarios_candidatos WHERE candidato_id = @candidato_id');
+
+    if (userRes.recordset.length === 0) {
+      // Crear usuario con rol admin
+      await pool
+        .request()
+        .input('candidato_id', sql.Int, candidatoId)
+        .query(`
+          INSERT INTO tbl_usuarios_candidatos (candidato_id, email, password_hash, rol)
+          VALUES (@candidato_id, '', '', 'admin')
+        `);
+    } else {
+      // Actualizar rol
+      await pool
+        .request()
+        .input('candidato_id', sql.Int, candidatoId)
+        .query(`UPDATE tbl_usuarios_candidatos SET rol = 'admin' WHERE candidato_id = @candidato_id`);
+    }
+
+    res.status(200).json({ status: 'success', message: `Admin asignado a cédula ${cleanCedula}` });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
+// LISTAR USUARIOS (admin)
+// ==========================================
+export async function listarUsuarios(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+    const result = await pool
+      .request()
+      .query(`
+        SELECT u.id_usuario, u.email, u.rol, u.activo, 
+               c.cedula, c.pnombre, c.papellido, c.celular,
+               c.fecha_sol
+        FROM tbl_usuarios_candidatos u
+        INNER JOIN tbl_candidatos c ON c.candidato_id = u.candidato_id
+        ORDER BY u.rol, c.fecha_sol DESC
+      `);
+
+    res.status(200).json({
+      status: 'success',
+      data: result.recordset || [],
     });
   } catch (error) {
     next(error);
