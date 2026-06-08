@@ -63,7 +63,8 @@ export const SolicitudWizard: React.FC = () => {
   };
 
   // 1. CARGAR DATOS
-  const LS_KEY = 'solicitud_wizard_' + invToken;
+
+  const getLsKey = () => 'solicitud_wizard_' + (invToken || '') + '_v2';
 
   const guardarProgress = () => {
     if (!invToken) return;
@@ -72,25 +73,41 @@ export const SolicitudWizard: React.FC = () => {
         datosGenerales, familiares, academicos, experiencias,
         referencias, idiomasCandidato, puesto, currentStep
       };
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      localStorage.setItem(getLsKey(), JSON.stringify(data));
     } catch {}
   };
 
   const restaurarProgress = () => {
     if (!invToken) return null;
     try {
-      const saved = localStorage.getItem(LS_KEY);
+      const saved = localStorage.getItem(getLsKey());
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   };
 
   const limpiarProgress = () => {
     if (!invToken) return;
-    try { localStorage.removeItem(LS_KEY); } catch {}
+    try { localStorage.removeItem(getLsKey()); } catch {}
   };
 
   useEffect(() => {
     const user = apiService.getCurrentUser();
+
+    // Intentar restaurar progreso guardado (para F5/refresco)
+    const saved = restaurarProgress();
+    if (saved) {
+      saved.datosGenerales && setDatosGenerales(saved.datosGenerales);
+      saved.familiares && setFamiliares(saved.familiares);
+      saved.academicos && setAcademicos(saved.academicos);
+      saved.experiencias && setExperiencias(saved.experiencias);
+      saved.referencias && setReferencias(saved.referencias);
+      saved.idiomasCandidato && setIdiomasCandidato(saved.idiomasCandidato);
+      saved.puesto && setPuesto(saved.puesto);
+      saved.currentStep && setCurrentStep(saved.currentStep);
+      apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
+      setIsLoading(false);
+      return;
+    }
 
     // Si no hay sesión pero hay token de invitación, modo invitado
     if (!user) {
@@ -100,21 +117,6 @@ export const SolicitudWizard: React.FC = () => {
           if (res.guestToken) {
             localStorage.setItem('token', res.guestToken);
             localStorage.setItem('candidato', JSON.stringify({ cedula: res.candidato?.cedula || '', existe: false }));
-          }
-          // Intentar restaurar progreso guardado
-          const saved = restaurarProgress();
-          if (saved) {
-            saved.datosGenerales && setDatosGenerales(saved.datosGenerales);
-            saved.familiares && setFamiliares(saved.familiares);
-            saved.academicos && setAcademicos(saved.academicos);
-            saved.experiencias && setExperiencias(saved.experiencias);
-            saved.referencias && setReferencias(saved.referencias);
-            saved.idiomasCandidato && setIdiomasCandidato(saved.idiomasCandidato);
-            saved.puesto && setPuesto(saved.puesto);
-            saved.currentStep && setCurrentStep(saved.currentStep);
-            apiService.getIdiomas().then(setCatalogoIdiomas).catch(() => {});
-            setIsLoading(false);
-            return;
           }
           if (res.candidato) {
             setCedula(res.candidato.cedula);
