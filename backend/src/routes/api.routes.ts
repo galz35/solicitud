@@ -81,5 +81,6 @@ router.delete('/candidatos/:cedula/idiomas/:cod_idioma', candidatoController.eli
 // ==========================================
 router.post('/admin/invitacion', restrictTo('admin'), validate(invitacionSchema), authController.generarInvitacion);
 router.get('/buscar', restrictTo('admin'), busquedaController.buscarCandidatos);
+router.get('/exportar', restrictTo('admin'), busquedaController.exportarCandidatos);
 
 export default router;

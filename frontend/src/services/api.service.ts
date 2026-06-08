@@ -176,6 +176,27 @@ export const apiService = {
     return response.data;
   },
 
+  async generarInvitacion(cedula: string, nombres?: string, apellidos?: string, celular?: string, dias_expiracion = 30) {
+    const response = await api.post('/admin/invitacion', { cedula, nombres, apellidos, celular, dias_expiracion });
+    return response.data;
+  },
+
+  async exportarCandidatos(query = '') {
+    const response = await api.get('/exportar', {
+      params: { q: query },
+      responseType: 'blob',
+    });
+    // Descargar el archivo
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'candidatos.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   // 9. CATÁLOGOS
   async getIdiomas() {
     const response = await api.get('/catalogos/idiomas');

@@ -28,7 +28,6 @@ export async function buscarCandidatos(req: Request, res: Response, next: NextFu
 
       totalRecords = filtered.length;
 
-      // Ordenar por fecha de solicitud desc y paginar
       const sorted = filtered.sort((a, b) => b.fecha_sol.getTime() - a.fecha_sol.getTime());
       const offset = (page - 1) * limit;
       const paginated = sorted.slice(offset, offset + limit);
@@ -74,6 +73,79 @@ export async function buscarCandidatos(req: Request, res: Response, next: NextFu
         pages: Math.ceil(totalRecords / limit),
       },
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ==========================================
+// EXPORTAR CANDIDATOS A CSV
+// ==========================================
+export async function exportarCandidatos(req: Request, res: Response, next: NextFunction) {
+  const q = (req.query.q as string || '').trim();
+
+  try {
+    if (isUsingFallback()) {
+      res.status(503).json({ status: 'fail', message: 'Base de datos no disponible' });
+      return;
+    }
+
+    const pool = await getConnectionPool();
+    const result = await pool
+      .request()
+      .input('filtro', sql.VarChar(100), q)
+      .input('page', sql.Int, 1)
+      .input('pageSize', sql.Int, 999999)
+      .output('totalRecords', sql.Int)
+      .execute('sp_BuscarCandidatos');
+
+    const candidatos = result.recordset || [];
+    const totalRecords = result.output.totalRecords || 0;
+
+    // Construir CSV manualmente (sin dependencias externas)
+    const headers = [
+      'Cédula',
+      'Primer Nombre',
+      'Segundo Nombre',
+      'Primer Apellido',
+      'Segundo Apellido',
+      'Celular',
+      'Correo',
+      'Puesto',
+      'Salario Mínimo',
+      'Salario Máximo',
+      'Fecha Registro',
+    ];
+
+    const safe = (v: any) => {
+      if (v === null || v === undefined) return '';
+      const s = String(v).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    let csv = '\uFEFF'; // BOM UTF-8
+    csv += headers.join(',') + '\n';
+
+    for (const c of candidatos) {
+      const fila = [
+        safe(c.cedula),
+        safe(c.pnombre),
+        safe(c.snombre),
+        safe(c.papellido),
+        safe(c.sapellido),
+        safe(c.celular),
+        safe(c.correo || ''),
+        safe(c.puesto),
+        safe(c.salario_min),
+        safe(c.salario_max),
+        safe(c.fecha_sol ? new Date(c.fecha_sol).toLocaleDateString('es-NI') : ''),
+      ];
+      csv += fila.join(',') + '\n';
+    }
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="candidatos.csv"');
+    res.status(200).send(csv);
   } catch (error) {
     next(error);
   }

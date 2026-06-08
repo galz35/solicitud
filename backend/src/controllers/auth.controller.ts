@@ -418,7 +418,8 @@ export async function ssoPortalLogin(req: Request, res: Response, next: NextFunc
     try {
       decoded = jwt.verify(ssoToken, SSO_SECRET);
     } catch (e) {
-      res.status(401).json({ status: 'fail', message: 'Token SSO inválido o expirado' });
+      // Usar 400 para que el interceptor de axios no redirija a login
+      res.status(400).json({ status: 'fail', message: 'Token SSO inválido o expirado' });
       return;
     }
 

@@ -6,6 +6,7 @@ import { SSOHandlerPage } from './features/auth/SSOHandlerPage';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { SolicitudWizard } from './features/solicitud/SolicitudWizard';
 import { BuscarPage } from './features/busqueda/BuscarPage';
+import { AdminDashboardPage } from './features/admin/AdminDashboardPage';
 import { ImprimirPage } from './features/impresion/ImprimirPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/solicitud" element={<ProtectedRoute><SolicitudWizard /></ProtectedRoute>} />
         <Route path="/buscar" element={<ProtectedRoute><BuscarPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/impresion/:cedula" element={<ProtectedRoute><ImprimirPage /></ProtectedRoute>} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>

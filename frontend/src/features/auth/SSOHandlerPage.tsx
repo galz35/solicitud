@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 
 export const SSOHandlerPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -17,12 +16,25 @@ export const SSOHandlerPage: React.FC = () => {
 
     const handleSSO = async () => {
       try {
-        const res = await apiService.ssoPortal(ssoToken);
-        setStatus(`Bienvenido ${res.candidato.nombre || ''}`);
-        setTimeout(() => navigate('/dashboard'), 1000);
-      } catch (e: any) {
-        setStatus('Error al iniciar sesión. Redirigiendo...');
-        setTimeout(() => navigate('/login'), 2000);
+        const resp = await fetch('/api-solicitud/api/auth/sso-portal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ssoToken }),
+        });
+        const data = await resp.json();
+
+        if (data.status === 'success') {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('candidato', JSON.stringify(data.candidato));
+          setStatus(`Bienvenido ${data.candidato.nombre || ''}`);
+          setTimeout(() => navigate('/dashboard'), 1000);
+        } else {
+          setStatus(data.message || 'Error de autenticación');
+          setTimeout(() => navigate('/login'), 1500);
+        }
+      } catch {
+        setStatus('Error de conexión');
+        setTimeout(() => navigate('/login'), 1500);
       }
     };
     handleSSO();
